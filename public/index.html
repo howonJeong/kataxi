@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Base Taxi Pool</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* 모바일 기본 초기화 */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #f2f4f7; 
+            margin: 0; 
+            padding: 16px; 
+            color: #1a1a1a;
+            line-height: 1.4;
+        }
+
+        .container { max-width: 500px; margin: 0 auto; }
+
+        /* 헤더 스타일 */
+        header { margin-bottom: 24px; padding: 10px 5px; }
+        header h1 { margin: 0; font-size: 24px; color: #007bff; }
+        header p { margin: 5px 0 0; font-size: 14px; color: #666; }
+
+        /* 카드 공통 스타일 */
+        .card { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            margin-bottom: 16px; 
+        }
+
+        h3 { margin-top: 0; font-size: 18px; margin-bottom: 15px; }
+
+        /* 폼 요소 스타일 */
+        label { display: block; font-size: 12px; font-weight: bold; color: #888; margin-bottom: 4px; margin-left: 2px; }
+        
+        select, input[type="time"] { 
+            width: 100%; 
+            height: 48px; 
+            padding: 0 12px; 
+            margin-bottom: 16px; 
+            border: 1px solid #e1e4e8; 
+            border-radius: 12px; 
+            font-size: 16px; /* 아이폰 자동확대 방지 */
+            background-color: #f9fafb;
+            color: #333;
+            outline: none;
+        }
+
+        select:focus, input:focus { border-color: #007bff; background-color: #fff; }
+
+        /* 메인 버튼 */
+        .btn-primary { 
+            width: 100%; 
+            height: 52px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer;
+        }
+        .btn-primary:active { background: #0056b3; transform: scale(0.98); }
+
+        /* 방 목록 아이템 스타일 */
+        .room-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-info { flex: 1; }
+        .room-time { font-size: 18px; font-weight: 800; color: #007bff; margin-bottom: 4px; }
+        .room-path { font-size: 15px; font-weight: 500; color: #333; margin-bottom: 4px; }
+        .room-meta { font-size: 13px; color: #888; }
+
+        .btn-join {
+            width: 70px;
+            height: 40px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-left: 12px;
+        }
+        .btn-join:active { background: #1e7e34; }
+
+        .my-room {
+            border: 2px solid #007bff;
+            background-color: #eef7ff !important;
+        }
+        .my-badge {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .payment-notice-box {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #fff9db; /* 연한 노란색 */
+            border: 1px dashed #fab005;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .toss-btn {
+            margin-top: 8px;
+            width: 100%;
+            height: 36px;
+            background: #0050ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+            
+        /* 헤더 정렬 */
+        .header-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* 로그아웃 버튼 스타일 */
+        .btn-logout {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #adb5bd;
+            padding: 6px 12px;
+            border-radius: 20px; /* 둥근 캡슐형 */
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:active {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        /* 사용자 정보 표시 */
+        .user-status {
+            font-size: 11px;
+            color: #adb5bd;
+            text-align: right;
+            margin-top: -15px;
+            margin-bottom: 15px;
+        }
+
+        .room-id-badge {
+            display: inline-block;    /* 핵심: 컨텐츠 크기만큼만 배경색이 채워짐 */
+            width: fit-content;       /* 컨텐츠 너비에 딱 맞춤 */
+            background: #007bff; 
+            color: white; 
+            padding: 4px 10px;        /* 상하 4px, 좌우 10px 여백 */
+            border-radius: 8px;       /* 모서리를 약간 둥글게 */
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;      /* 아래 요소와 간격 유지 */
+            box-shadow: 0 2px 4px rgba(0,123,255,0.2); /* 살짝 입체감 추가 */
+        }
+        /* 구분선 */
+        .section-title { margin: 24px 5px 12px; font-size: 16px; font-weight: bold; color: #444; }
+    </style>
+</head>
+<body>
+
+<div id="login-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#f2f4f7; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+    <div class="card" style="width:100%; max-width:350px; text-align:center;">
+        <h2 style="color:#007bff; margin-top:0;">🚕 Taxi Pool</h2>
+        <p style="font-size:14px; color:#666; margin-bottom:20px;">아이디와 비밀번호를 입력하세요.<br><small>(첫 접속 시 자동 가입됩니다)</small></p>
+        
+        <input type="text" id="user-id" placeholder="아이디" style="width:100%; height:48px; padding:12px; margin-bottom:12px; border:1px solid #ddd; border-radius:12px; font-size:16px;">
+        <input type="password" id="user-pw" placeholder="비밀번호" style="width:100%; height:48px; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:12px; font-size:16px;">
+        
+        <button class="btn-primary" onclick="attemptLogin()">입장하기</button>
+    </div>
+</div>    
+
+<div id="main-app" class="container" style="display: none;">
+    <div class="header-wrapper">
+        <header style="margin-bottom: 0;">
+            <h1>택시 카풀</h1>
+            <p>@ Camp Humphreys</p>
+        </header>
+        <button class="btn-logout" onclick="logout()">로그아웃</button>
+    </div>
+    
+    <div id="user-display" class="user-status"></div>
+    
+    <div class="card" style="background: #eef7ff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="margin: 0;">🔍 맞춤 카풀 찾기</h3>
+            <button onclick="resetSearch()" style="background: none; border: none; color: #007bff; font-size: 13px; font-weight: bold; cursor: pointer;">🔄 전체보기</button>
+        </div>
+        
+        <label>조회 날짜</label>
+        <input type="date" id="search-date" style="width: 100%; height: 52px; padding: 0 12px; margin-bottom: 16px; border: 1px solid #e1e4e8; border-radius: 12px; font-size: 16px;" onchange="searchPool()">
+        
+        <label>출발지</label>
+        <select id="search-origin" style="width: 100%; height: 52px; margin-bottom: 16px;" onchange="searchPool()"></select>
+        
+        <label>목적지</label>
+        <select id="search-dest" style="width: 100%; height: 52px; margin-bottom: 0;" onchange="searchPool()"></select>
+    </div>
+
+    <div id="list-title" class="section-title">모든 카풀</div>
+    
+    <div id="room-list">
+        <div style="text-align: center; padding: 20px; color: #999;">목록을 불러오는 중...</div>
+    </div>
+
+    <div class="section-title" style="text-align: center; padding: 20px; color: #999;">원하시는 조회 결과가 없나요?</div>
+
+    <div class="card" style = "padding: 20px">
+        <h3>📅 새 카풀 제안하기</h3>
+        
+        <label>출발지</label>
+        <select id="origin-select">
+            <option value="" disabled selected>출발지를 선택하세요</option>
+        </select>
+        
+        <label>목적지</label>
+        <select id="dest-select">
+            <option value="" disabled selected>목적지를 선택하세요</option>
+        </select>
+
+        <label>출발 날짜</label>
+        <input type="date" id="date-input">
+
+        <label>출발 시간</label>
+        <input type="time" id="time-input">
+
+        <button class="btn-primary" onclick="createRoom()">카풀 제안하기</button>
+    </div>
+</div>
+
+<div id="payment-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:3000; align-items:center; justify-content:center;">
+    <div class="card" style="width:90%; max-width:350px;">
+        <h3>💰 결제 정보 입력</h3>
+        <label>총 결제 금액</label>
+        <input type="number" id="pay-amount" placeholder="예: 12000" style="width:100%; height:45px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd; padding:10px;">
+        
+        <label>은행 선택</label>
+        <select id="pay-bank" style="width:100%; height:45px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd;">
+            <option value="국민은행">국민은행</option>
+            <option value="신한은행">신한은행</option>
+            <option value="우리은행">우리은행</option>
+            <option value="카카오뱅크">카카오뱅크</option>
+            <option value="토스뱅크">토스뱅크</option>
+            <option value="농협">농협</option>
+            <option value="기업은행">기업은행</option>
+            <option value="기업은행">기타</option>
+        </select>
+
+        <label>계좌번호</label>
+        <input type="text" id="pay-account" placeholder="'-' 제외 입력" style="width:100%; height:45px; margin-bottom:20px; border-radius:10px; border:1px solid #ddd; padding:10px;">
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn-primary" onclick="submitPayment()" style="flex:2;">정산 요청</button>
+            <button class="btn-primary" onclick="closePayModal()" style="flex:1; background:#666;">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const socket = io();
+    const roomListDiv = document.getElementById('room-list');
+    const listTitle = document.getElementById('list-title');
+
+    let isSearchMode = false;
+    let myId = "";
+    let currentSearchCriteria = { origin: "", dest: "" };
+    let currentRoomIdForPay = null;
+
+    // 1. 장소 리스트 초기화
+    async function initSetup() {
+        try {
+            const res = await fetch('/api/locations');
+            const locations = await res.json();
+            
+            const targetIds = ['origin-select', 'dest-select', 'search-origin', 'search-dest'];
+            const optionsHtml = locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
+
+            targetIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const label = id.includes('origin') ? '출발지' : '목적지';
+                    el.innerHTML = `<option value="" selected>${label} 선택(전체)</option>` + optionsHtml;
+                }
+            });
+        } catch (e) {
+            console.error("장소 로드 실패", e);
+        }
+    }
+
+    function setToday() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date-input').value = today; // 제안용
+        document.getElementById('search-date').value = today; // 검색용
+    }
+
+    // 2. 로그인 및 접속 처리
+    function attemptLogin() {
+        const userId = document.getElementById('user-id').value;
+        const userPw = document.getElementById('user-pw').value;
+        if(!userId || !userPw) return alert("아이디/비번을 입력하세요.");
+        socket.emit('login', { userId, userPw });
+    }
+
+    socket.on('login_success', (data) => {
+        myId = data.userId;
+        const inputPw = document.getElementById('user-pw').value;
+        if (inputPw) {
+            localStorage.setItem('auto_id', myId);
+            localStorage.setItem('auto_pw', inputPw);
+        }
+        document.getElementById('user-display').innerText = `${myId} 접속 중`
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+
+        initSetup();
+        setToday();
+        socket.emit('request_init_rooms'); 
+    });
+
+    socket.on('error_msg', (msg) => alert(msg));
+
+    function syncDateAndSearch() {
+
+    }
+
+    // 3. 검색 관련 함수
+    function searchPool() {
+        const origin = document.getElementById('search-origin').value;
+        const dest = document.getElementById('search-dest').value;
+        const date = document.getElementById('search-date').value; // 이 값이 18일이면
+
+        // 날짜가 선택되어 있다면, 장소가 비어있어도 검색 모드로 유지합니다.
+        if (date !== "") { 
+            isSearchMode = true;
+            socket.emit('search_rooms', { origin, dest, date });
+        } 
+        // 날짜조차 없고 장소도 없으면 그때 리셋합니다.
+        else if (origin !== "" || dest !== "") {
+            isSearchMode = true;
+            socket.emit('search_rooms', { origin, dest, date });
+        } else {
+            resetSearch();
+        }
+    }
+
+    // 4. 리셋 함수 수정 (날짜를 억지로 오늘로 바꾸지 않음)
+    function resetSearch() {
+        isSearchMode = false;
+        currentSearchCriteria = { origin: "", dest: "", date: "" };
+        
+        // 장소 선택지만 초기화하고, 날짜 칸은 건드리지 않습니다.
+        document.getElementById('search-origin').value = "";
+        document.getElementById('search-dest').value = "";
+        
+        // 강제로 setToday() 같은 걸 호출하지 말고 현재 상태로 목록만 다시 부릅니다.
+        socket.emit('request_init_rooms'); 
+    }
+
+    // 전체 목록 업데이트 수신
+    socket.on('update_rooms', (data) => {
+        // 검색 모드가 아닐 때만 자동 갱신 (사용자가 검색 중인데 목록이 바뀌면 당황스러우니까요)
+        if (!isSearchMode) {
+            renderRooms(data.rooms, data.searchCriteria);
+        }
+    });
+
+    // 검색 결과 수신
+    socket.on('search_result', (data) => {
+        isSearchMode = true; 
+        renderRooms(data.rooms, data.searchCriteria);
+    });
+
+    // 4. 방 생성 및 참여/취소
+    function createRoom() {
+        const origin = document.getElementById('origin-select').value;
+        const dest = document.getElementById('dest-select').value;
+        const date = document.getElementById('date-input').value;   
+        const time = document.getElementById('time-input').value;
+        
+        if(!origin || !dest || !date || !time) return alert("정보를 모두 입력해주세요!");
+        if (new Date(`${date}T${time}`) < new Date()) return alert("과거 시간은 선택 불가합니다.");
+
+        socket.emit('create_room', { origin, dest, date, time });
+    }
+
+    function joinRoom(roomId) {
+        if(confirm("이 카풀에 참여하시겠습니까?")) socket.emit('join_room', roomId);
+    }
+    
+    function cancelJoin(roomId) {
+        if(confirm("참여를 취소하시겠습니까?")) socket.emit('cancel_join', { roomId });
+    }
+
+    // 5. 정산 관련
+    function openPayModal(roomId) {
+        currentRoomIdForPay = roomId;
+        document.getElementById('payment-modal').style.display = 'flex';
+    }
+    function closePayModal() { document.getElementById('payment-modal').style.display = 'none'; }
+
+    function submitPayment() {
+        const amount = document.getElementById('pay-amount').value;
+        const bank = document.getElementById('pay-bank').value;
+        const account = document.getElementById('pay-account').value;
+        if(!amount || !account) return alert("내역을 입력해주세요.");
+        socket.emit('submit_payment', { roomId: currentRoomIdForPay, amount, bank, account });
+        closePayModal();
+    }
+
+    function copyAccount(acc) {
+        navigator.clipboard.writeText(acc).then(() => alert("계좌번호 복사됨"));
+    }
+
+    function completePayment(roomId) {
+        if(confirm("정산을 완료하고 목록에서 삭제하시겠습니까?")) socket.emit('complete_payment', { roomId });
+    }
+
+    // 6. 메인 렌더링 함수 (핵심)
+    function renderRooms(rooms, searchCriteria = null) {
+        const now = new Date();
+        const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+        const currentTimeStr = kstNow.toISOString().split('T')[1].substring(0, 5);
+        const currentDateStr = kstNow.toISOString().split('T')[0];
+
+        if (searchCriteria) currentSearchCriteria = searchCriteria;
+
+        // 제목 변경
+        if (isSearchMode) {
+            const o = currentSearchCriteria.origin || "어디서든";
+            const d = currentSearchCriteria.dest || "어디로든";
+            listTitle.innerHTML = `🔍 <span style="color:#007bff">${o} ➔ ${d}</span> 검색 결과`;
+        } else {
+            listTitle.innerText = "모든 카풀 목록";
+        }
+
+        if(!rooms || rooms.length === 0) {
+            roomListDiv.innerHTML = isSearchMode ? 
+                `<div class="card" style="text-align:center; padding:30px;">
+                    <p>해당 지역 및 인근에 카풀이 없습니다. 😅</p>
+                    <button class="btn-primary" onclick="resetSearch()" style="width:auto; padding:0 20px;">전체 목록 보기</button>
+                 </div>` : 
+                `<div class="card" style="text-align:center; padding:20px; color:#999;">현재 등록된 카풀이 없습니다.</div>`;
+            return;
+        }
+
+        let html = '';
+        let lastDate = '';
+
+        rooms.forEach(room => {
+            const participants = room.participantList ? room.participantList.split(',') : [];
+            const isJoined = participants.includes(myId);
+            const isFull = room.currentPax >= room.maxPax;
+            const isPast = (room.date < currentDateStr) || (room.date === currentDateStr && room.time < currentTimeStr);
+
+            // 인근 배지 로직
+            const isNearbyOrigin = isSearchMode && currentSearchCriteria.origin && room.origin !== currentSearchCriteria.origin;
+            const isNearbyDest = isSearchMode && currentSearchCriteria.dest && room.dest !== currentSearchCriteria.dest;
+            const originText = `${room.origin}${isNearbyOrigin ? ' <small style="color:#f08c00; font-weight:bold;">(인근)</small>' : ''}`;
+            const destText = `${room.dest}${isNearbyDest ? ' <small style="color:#f08c00; font-weight:bold;">(인근)</small>' : ''}`;
+
+            if (room.date !== lastDate) {
+                html += `<div class="section-title">📅 ${room.date}</div>`;
+                lastDate = room.date;
+            }
+
+            let paymentSection = "";
+            if (room.payAmount > 0 && isJoined) {
+                const splitAmount = Math.floor(room.payAmount / room.currentPax);
+                paymentSection = `
+                    <div class="payment-notice-box">
+                        <strong>💰 정산 안내: ${splitAmount.toLocaleString()}원</strong><br>
+                        ${room.payerId} (${room.payBank}) <code>${room.payAccount}</code>
+                        <button class="toss-btn" onclick="copyAccount('${room.payAccount}')">계좌 복사</button>
+                        ${room.payerId === myId ? `<button class="toss-btn" onclick="completePayment(${room.id})" style="background:#28a745; margin-top:8px;">정산 완료 처리</button>` : ''}
+                    </div>`;
+            }
+
+            const paxPercent = (room.currentPax / room.maxPax) * 100;
+            const cardStyle = isPast ? 'border-left: 4px solid #adb5bd;' : '';
+            const contentOpacity = isPast ? 'opacity: 0.6;' : '';
+
+            html += `
+                <div class="card ${isJoined ? 'my-room' : ''}" style="${cardStyle}">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; ${contentOpacity}">
+                        <div class="room-id-badge" style="background:${isPast ? '#6c757d' : '#007bff'}">
+                            🏠 ${room.roomName || '카풀'} ${isPast ? '(종료)' : ''}
+                        </div>
+                        <span style="font-size:11px; color:#ccc;">#${room.id.toString().padStart(3,'0')}</span>
+                    </div>
+                    <div class="room-item">
+                        <div class="room-info" style="${contentOpacity}">
+                            <div class="room-time">${room.time} ${isJoined ? '<span class="my-badge">참여 중</span>' : ''}</div>
+                            <div class="room-path">${originText} ➔ ${destText}</div>
+                            <div style="width: 80%; background: #eee; height: 6px; border-radius: 3px; margin: 8px 0;">
+                                <div style="width: ${paxPercent}%; background: ${isFull ? '#fa5252' : '#28a745'}; height: 100%; border-radius: 3px;"></div>
+                            </div>
+                            <div class="room-meta">인원: <strong>${room.currentPax}/${room.maxPax}명</strong></div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:5px; min-width:80px;">
+                            ${isJoined ? 
+                                `<button class="btn-join" onclick="openPayModal(${room.id})" style="background:#28a745;">내가 결제</button>
+                                 <button class="btn-join" onclick="cancelJoin(${room.id})" style="background:#dc3545;" ${isPast ? 'disabled' : ''}>취소</button>` : 
+                                `<button class="btn-join" onclick="joinRoom(${room.id})" style="background:#28a745;" ${isFull || isPast ? 'disabled style="background:#ccc;"' : ''}>
+                                    ${isPast ? '종료' : (isFull ? '만차' : '합승')}
+                                 </button>`
+                            }
+                        </div>
+                    </div>
+                    ${paymentSection}
+                </div>`;
+        });
+        roomListDiv.innerHTML = html;
+    }
+
+    function logout() {
+        if (confirm("로그아웃 하시겠습니까?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    window.onload = function() {
+        const savedId = localStorage.getItem('auto_id');
+        const savedPw = localStorage.getItem('auto_pw');
+        if (savedId && savedPw) socket.emit('login', { userId: savedId, userPw: savedPw });
+
+        // 여기서 세팅
+        initSetup();
+        setToday();
+    };
+
+    setInterval(() => { if (myId && !isSearchMode) socket.emit('request_init_rooms'); }, 60000);
+
+</script>
+
+</body>
+</html>
