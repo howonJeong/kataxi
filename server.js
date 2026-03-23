@@ -83,6 +83,19 @@ let db;
             PRIMARY KEY (roomId, userId),
             FOREIGN KEY (roomId) REFERENCES rooms(id) ON DELETE CASCADE
         );
+        CREATE TABLE IF NOT EXISTS history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId TEXT,
+            origin TEXT,
+            dest TEXT,
+            date TEXT,
+            time TEXT,
+            totalAmount INTEGER,
+            splitAmount INTEGER,
+            pax INTEGER,
+            isPayer BOOLEAN,
+            completedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
     `);
     console.log("M2 MacBook: SQLite Database Ready!");
 })();
@@ -320,18 +333,53 @@ io.on('connection', (socket) => {
         if (!socket.userId) return;
 
         try {
-            // 보안 확인: 결제자 본인만 방을 닫을 수 있게 설정
-            const room = await db.get(`SELECT payerId FROM rooms WHERE id = ?`, [roomId]);
-            
-            if (room && room.payerId === socket.userId) {
-                await db.run(`DELETE FROM rooms WHERE id = ?`, [roomId]);
-                console.log(`[정산완료/방삭제] 결제자 ${socket.userId}가 방 ${roomId}을 종료함`);
-                broadcastRooms(); // 목록 갱신
-            } else {
-                socket.emit('error_msg', '결제자만 정산 완료 처리를 할 수 있습니다.');
+            // 1. 방 정보와 참여자 명단을 한 번에 가져오기
+            const room = await db.get(`
+                SELECT r.*, (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId = r.id) as participantList
+                FROM rooms r WHERE r.id = ?
+            `, [roomId]);
+
+            if (!room || !room.participantList) return;
+
+            const participants = room.participantList.split(',');
+            const paxCount = participants.length;
+            const splitAmount = Math.floor(room.payAmount / paxCount);
+
+            // 2. 히스토리에 기록 (반복문 돌며 await)
+            for (const uId of participants) {
+                await db.run(`
+                    INSERT INTO history 
+                    (userId, origin, dest, date, time, totalAmount, splitAmount, pax, isPayer) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [uId, room.origin, room.dest, room.date, room.time, 
+                    room.payAmount, splitAmount, paxCount, (uId === room.payerId ? 1 : 0)]);
             }
+
+            // 3. 방 및 참여자 데이터 삭제 (Cascade 설정되어 있어도 안전하게 삭제)
+            await db.run("DELETE FROM rooms WHERE id = ?", [roomId]);
+            await db.run("DELETE FROM participants WHERE roomId = ?", [roomId]);
+
+            console.log(`[정산완료/폭파] 방 ID: ${roomId} 기록 완료`);
+            
+            // 4. 즉시 갱신 신호 발송
+            io.emit('update_rooms', { rooms: [] }); // 전체 갱신 트리거
+            io.emit('history_updated'); 
+            
         } catch (e) {
-            console.error(e);
+            console.error("정산 완료 처리 에러:", e);
+        }
+    });
+
+    socket.on('request_history', async () => {
+        if (!socket.userId) return;
+        try {
+            const rows = await db.all(
+                "SELECT * FROM history WHERE userId = ? ORDER BY completedAt DESC", 
+                [socket.userId]
+            );
+            socket.emit('history_data', rows || []);
+        } catch (e) {
+            console.error("히스토리 조회 에러:", e);
         }
     });
 

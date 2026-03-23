@@ -1,0 +1,463 @@
+/* ===========================
+   1. 기본 초기화 및 변수 설정
+=========================== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+html {
+    background-color: #1a1f2c !important; /* 시스템 배경색 강제 고정 */
+}
+
+:root {
+    --bg-main: #1a1f2e;         /* 깊은 다크 네이비 배경 */
+    --card-bg: #242938;         /* 카드 및 패널 배경 */
+    --primary: #3b6fc4;         /* 신뢰감 있는 블루 */
+    --accent: #f59e0b;          /* 포인트 컬러: 세련된 번트 오렌지 */
+    --accent-dark: #d97706;
+    --text-main: #e2e6ed;
+    --text-muted: #5a6680;
+    --border: rgba(255, 255, 255, 0.08);
+    --radius-sm: 2px;    /* 완전한 직사각형에 가까운 날카로운 모서리 */
+    --radius-md: 4px;    /* 카드 곡률도 함께 줄여 일체감을 줍니다 */
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: -0.03em;
+}
+
+.tab-content {
+    padding-bottom: 150px; /* FAB와 네비바 높이만큼 여유 공간 확보 */
+}
+
+body {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    letter-spacing: -0.02em; /* 자간을 살짝 조여서 세련미 추가 */
+    line-height: 1.6;        /* 행간을 넓혀 가독성 확보 */
+    -webkit-font-smoothing: antialiased; /* 글자를 더 매끄럽게 표현 */
+    background-color: var(--bg-main);
+    margin: 0;
+    padding: 16px;
+    padding-bottom: 100px; /* 하단 네비게이션 바 공간 확보 */
+    color: var(--text-main);
+    line-height: 1.5;
+    min-height: 100vh;
+    /* 은은한 그라데이션 질감 추가 */
+    background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(42, 60, 100, 0.3) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(20, 30, 55, 0.4) 0%, transparent 60%);
+}
+
+.container { max-width: 500px; margin: 0 auto; }
+
+/* ===========================
+   2. 헤더 및 상단 정보
+=========================== */
+.header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 12px 4px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 900;
+    color: #c8d6f0;
+    text-shadow: 0 1px 10px rgba(120, 160, 230, 0.2);
+}
+
+header p { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); }
+
+.user-status {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: -15px;
+    margin-bottom: 15px;
+}
+
+.btn-logout {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #7a8ba8;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* ===========================
+   3. 카드 및 섹션 디자인
+=========================== */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    margin-bottom: 16px;
+}
+
+.card .title {
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.card .sub-text {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.section-title {
+    margin: 28px 4px 12px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #4a5568;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* 헤더 전체 컨테이너 */
+.kitsch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* [수정] 위아래 중앙 정렬로 변경 */
+    padding: 15px 20px;
+    background: #1a1f2c;
+    border-bottom: 3px solid #000;
+    margin-bottom: 10px;
+}
+/* 헤더 전체 컨테이너 */
+.kitsch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+    padding: 15px 20px;
+    background: #1a1f2c;
+    border-bottom: 3px solid #000;
+    margin-bottom: 20px; /* 여백 확보 */
+}
+
+/* 로고 영역 */
+.kitsch-logo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.main-text {
+    font-size: 22px;
+    font-weight: 900;
+    color: #f1f333; 
+    text-shadow: 2px 2px 0px #000;
+    letter-spacing: -0.05em;
+    transform: rotate(-1deg);
+    display: inline-block;
+}
+
+.sub-tag {
+    font-size: 10px;
+    font-weight: 800;
+    background: #ffffff;
+    color: #000;
+    padding: 1px 5px;
+    border: 1.5px solid #000;
+    width: fit-content;
+    box-shadow: 1px 1px 0px #000;
+}
+
+/* 유저 정보 박스 */
+.user-info-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; 
+    gap: 6px; 
+}
+
+.user-status {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 !important; /* 기존 .user-status 마진값 간섭 제거 */
+}
+
+.user-id {
+    color: #c2a5a5 !important;
+    /*background: #39ff14 !important; 
+    */
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-weight: 900;
+    box-shadow: 2px 2px 0px #000;
+    margin-right: 2px;
+}
+
+.logout-badge {
+    background: #ff4757;
+    color: #000;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 3px 10px;
+    border: 2px solid #000;
+    border-radius: 4px;
+    box-shadow: 2px 2px 0px #000;
+    cursor: pointer;
+    transform: rotate(2deg);
+    transition: 0.1s;
+}
+
+.logout-badge:active {
+    transform: translate(1px, 1px) rotate(2deg);
+    box-shadow: 0px 0px 0px #000;
+}
+
+h3 { margin-top: 0; font-size: 17px; font-weight: 700; margin-bottom: 16px; color: #c0cce0; }
+
+/* ===========================
+   4. 입력 폼 스타일
+=========================== */
+label { display: block; font-size: 11px; font-weight: 800; color: #4e5c75; margin-bottom: 6px; text-transform: uppercase; }
+
+select, input {
+    width: 100%;
+    height: 50px;
+    padding: 0 14px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    background-color: #1a1f2e;
+    color: #c8d6f0;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 111, 196, 0.2); }
+
+/* ===========================
+   5. 버튼 스타일
+=========================== */
+.btn-primary {
+    width: 100%;
+    height: 52px;
+    background: linear-gradient(135deg, #3b6fc4 0%, #2a5298 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(42, 82, 152, 0.4);
+}
+
+.btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+
+/* ===========================
+   6. 방 목록 및 참여 상태
+=========================== */
+.room-item { display: flex; justify-content: space-between; align-items: center; }
+
+.room-id-badge {
+    background: linear-gradient(135deg, #3b6fc4 0%, #2a5298 100%);
+    color: #d6e4ff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.room-time { font-size: 22px; font-weight: 900; color: #7aaae8; margin-bottom: 4px; }
+.room-path { font-size: 15px; font-weight: 600; color: #b0bdd0; margin-bottom: 6px; }
+.room-meta { font-size: 12px; color: var(--text-muted); }
+
+.btn-join {
+    min-width: 70px;
+    height: 42px;
+    background: linear-gradient(135deg, #2e7d52 0%, #1e5c3a 100%);
+    color: #c8f0d8;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+/* 내가 참여한 방 강조 */
+.my-room {
+    border: 1.5px solid var(--accent) !important; /* 오렌지 테두리 */
+    background-color: #1e2840 !important;
+}
+
+.my-badge {
+    background: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 900;
+    margin-left: 6px;
+}
+
+/* 정산 박스 */
+.payment-notice-box {
+    margin-top: 16px;
+    padding: 15px;
+    background-color: #1e1c14;
+    border: 1px solid rgba(180, 130, 20, 0.4);
+    border-radius: 12px;
+    font-size: 13px;
+    color: #b0a070;
+}
+
+.toss-btn {
+    margin-top: 10px;
+    width: 100%; height: 38px;
+    background: linear-gradient(135deg, #1a3db5 0%, #0f2a85 100%);
+    color: white; border: none; border-radius: 8px;
+    font-weight: 700; font-size: 13px;
+}
+
+/* ===========================
+   7. 하단 네비게이션 & 플로팅 버튼
+=========================== */
+.bottom-nav {
+    display: flex;
+    justify-content: space-between; /* 양 끝과 중앙을 균등하게 배분 */
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;         /* 왼쪽 끝 고정 */
+    right: 0;        /* 오른쪽 끝 고정 */
+    width: 100%;     /* 전체 너비 확보 */
+    background: #1a1f2c;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    z-index: 1000;
+    padding: 0;      /* 내부 패딩 제거 (쏠림 방지) */
+    box-sizing: border-box;
+    padding-bottom: env(safe-area-inset-bottom); /* 하단 바 영역만큼 패딩 추가 */
+    height: calc(70px + env(safe-area-inset-bottom)); /* 높이를 유동적으로 조절 */
+}
+
+/* 중앙 메인 버튼 컨테이너 */
+.nav-item, .nav-item-main {
+    flex: 1;         /* 1:1:1 비율로 강제 배분 */
+    width: 33.33%;   /* 명시적으로 3분할 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-align: center;
+}
+
+/* 중앙 버튼만 위로 툭 튀어나오게 조정 */
+.nav-item-main {
+    position: relative;
+    height: 100%;    /* 부모 높이만큼 확보 */
+}
+
+.main-circle {
+    position: absolute;
+    top: -20px;
+    width: 56px; /* 크기를 살짝 키워 아이콘 공간 확보 */
+    height: 56px;
+    background: var(--accent); /* 노란색 계열 배경 */
+    color: white; /* 아이콘 색상은 하얀색으로 대비 */
+    display: flex;
+    align-items: center;    /* 세로 중앙 정렬 */
+    justify-content: center; /* 가로 중앙 정렬 */
+    border-radius: 10px; /* 각진 직사각형 느낌 유지 */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    
+    /* [핵심] 아이콘 자체 스타일 설정 */
+    font-size: 24px; /* 아이콘 크기를 시원하게 키움 */
+    font-weight: 700; /* 굵게 표현 */
+}
+
+.nav-item-main:active .main-circle {
+    transform: scale(0.92);
+    background: var(--accent-dark); /* 터치 시 약간 어두워지는 효과 */
+}
+
+/* 제안하기 텍스트 위치 조정 */
+.nav-item-main span {
+    margin-top: 40px; /* 아이콘이 올라간 만큼 텍스트는 내려줌 */
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #5a6680;
+    cursor: pointer;
+}
+
+.nav-item.active {
+    color: var(--accent);
+}
+/* 하단 고정 직사각형 FAB */
+.fab-fixed {
+    position: fixed;
+    bottom: 80px; /* 네비게이션 바 바로 위 */
+    right: 20px;
+    left: 20px;   /* 좌우 여백을 주어 가로로 긴 직사각형 형태 */
+    height: 56px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px; /* 날카로운 직사각형 느낌 */
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.fab-fixed:active {
+    transform: scale(0.98);
+}
+
+/* 아이콘과 텍스트 간격 */
+.fab-fixed i {
+    margin-right: 8px;
+    font-size: 20px;
+}
+
+/* ===========================
+   8. 모달 시스템
+=========================== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(10, 14, 23, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 4000;
+    padding: 24px;
+}
+
+.modal-content {
+    width: 100%; max-width: 400px;
+    animation: modalUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes modalUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
