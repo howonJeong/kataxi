@@ -8,14 +8,15 @@
     <meta name="theme-color" content="#1a1f2c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Base Taxi Pool</title>
+    <link rel="icon" href="https://fav.farm/🚕" /> 
+    <title>가치-탑시다!</title>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="/style.css"> </head>
 <body>
 
 <div id="login-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#1a1f2e; z-index:5000; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
     <div class="card" style="width:100%; max-width:350px; text-align:center; border: 1px solid rgba(255,255,255,0.1);">
-        <h2 style="color:#7aaae8; margin-top:0; font-weight: 900;">🚕 Taxi Pool</h2>
+        <h1 class="kitsch-logo"> KATCHI - TAPSIDA</h1>
         <p style="font-size:13px; color:#5a6680; margin-bottom:24px;">아이디와 비밀번호를 입력하세요.<br><small>(첫 접속 시 자동 가입됩니다)</small></p>
         
         <label style="text-align: left;">ID</label>
@@ -30,10 +31,6 @@
 <div id="main-app" class="container" style="display: none;">
     
     <div class="kitsch-header">
-        <div class="kitsch-logo">
-            <span class="main-text">KATCHI-TAPSIDA!</span>
-        </div>
-
         <div class="user-info-box">
             <div class="user-status">
                 <span id="header-user-id" class="user-id">똑똑한 청년.</span>님 접속 중
@@ -86,6 +83,16 @@
             <div style="text-align: center; padding: 20px; color: #5a6680;">이용 기록을 불러오는 중...</div>
         </div>
     </div>
+
+    <footer class="kitsch-footer">
+        <div class="footer-content">
+            <p class="copyright">© 2026 KATCHI-TAPSIDA. ALL RIGHTS RESERVED.</p>
+            <div class="contact-info">
+                <span>CONTACT: <a href="mailto:admin@kataxi.com">getjeongwork@gmail.com</a></span>
+            </div>
+            <p class="disclaimer">본 서비스는 개인 간 카풀 매칭을 돕는 플랫폼으로, 실제 운송 책임은 당사자에게 있습니다.</p>
+        </div>
+    </footer>
 
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
