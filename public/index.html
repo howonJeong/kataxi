@@ -4,12 +4,24 @@
 <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a1f2c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <link rel="icon" href="https://fav.farm/🚕" /> 
+    
     <title>가치-탑시다!</title>
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-domain.com"> <meta property="og:title" content="🚕 KATCHI-TAPSIDA! | 같이탑시다">
+    <meta property="og:description" content="단결! 저와 함꼐 카풀하실 분을 찾습니다.">
+    
+    <meta property="og:image" content="https://your-domain.com/og-image.png">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="400">
+
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="/style.css"> </head>
 <body>
@@ -168,6 +180,22 @@
     let currentSearchCriteria = { origin: "", dest: "", date: "" };
     let currentRoomIdForPay = null;
 
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isKakaoTalk = userAgent.includes('kakaotalk');
+
+    if (isKakaoTalk) {
+        // 현재 전체 URL 가져오기
+        const currentUrl = window.location.href;
+
+        if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
+            // 🍎 아이폰: 사파리로 열기 (kakaotalk://web/openExternal?url=... 방식)
+            window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(currentUrl);
+        } else {
+            // 🤖 안드로이드: 구글 크롬으로 열기 (intent://... 방식)
+            window.location.href = 'intent://' + currentUrl.replace(/https?:\/\//, '') + '#Intent;scheme=http;package=com.android.chrome;end';
+        }
+    }
+    
     // [1] 초기화 및 자동 로그인
     async function initSetup() {
         try {

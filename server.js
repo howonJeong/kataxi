@@ -178,7 +178,7 @@ io.on('connection', (socket) => {
             const roomName = `${adj} ${ani}`;
 
             const result = await db.run(
-                `INSERT INTO rooms (roomName, creatorId, date, origin, dest, time) VALUES (?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO rooms (roomName, creatorId, date, chatUrl, origin, dest, time) VALUES (?, ?, ?, ?, ?, ?)`,
                 [roomName, socket.userId, date, origin, dest, time]
             );
             
