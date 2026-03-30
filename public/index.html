@@ -577,7 +577,7 @@
 
                     <div style="display: flex; gap: 6px;">
                         ${!isPayer ? `
-                            <button class="toss-btn" onclick="copyAccount('${room.payAccount}')" style="flex: 1; padding: 8px 0; font-size: 11px; background: #313d4f;">
+                            <button class="toss-btn" onclick="copyAccount('${room.payBank} ${room.payAccount}')" style="flex: 1; padding: 8px 0; font-size: 11px; background: #313d4f;">
                                 <i class="fas fa-copy"></i> 계좌 복사
                             </button>
                             <button class="toss-btn" onclick="openToss('${room.payBank}', '${room.payAccount}')" style="flex: 1; padding: 8px 0; font-size: 11px; background: #0064ff; color: white; border: none;">
