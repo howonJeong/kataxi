@@ -129,14 +129,27 @@
     <div class="card modal-content">
         <h3>📅 새 카풀 제안</h3>
         <label>출발지</label>
-        <select id="origin-select"></select>
+        <select id="origin-select" onchange="updateSpecificSpots()"></select>
+
+        <label>접선 상세 위치</label>
+        <select id="specific-spot-select" onchange="toggleCustomSpotInput()">
+            <option value="">출발지를 먼저 선택하세요</option>
+        </select>
+        <input type="text" id="custom-spot-input" placeholder="상세 위치 직접 입력 (예: 편의점 앞)" 
+               style="display: none; margin-top: 8px;">
+               
         <label>목적지</label>
         <select id="dest-select"></select>
         <label>날짜</label>
         <input type="date" id="date-input">
         <label>시간</label>
         <input type="time" id="time-input">
-        
+        <label>최대 탑승 인원 (본인 포함)</label>
+        <select id="max-pax-select">
+            <option value="2">2명 (단란하게)</option>
+            <option value="3">3명 (적당하게)</option>
+            <option value="4" selected>4명 (꽉 채워서)</option>
+        </select>
         <div style="display: flex; gap: 8px; margin-top: 24px;">
             <button class="btn-primary" onclick="createRoom()" style="flex: 1; margin: 0;">
                 제안하기
@@ -195,12 +208,21 @@
             window.location.href = 'intent://' + currentUrl.replace(/https?:\/\//, '') + '#Intent;scheme=http;package=com.android.chrome;end';
         }
     }
-    
+
+    let cachedSpecificSpots = {}; // 서버에서 받아온 데이터를 담을 변수
+
     // [1] 초기화 및 자동 로그인
     async function initSetup() {
         try {
-            const res = await fetch('/api/locations');
-            const locations = await res.json();
+            // 대표 장소 로드 (기존 코드)
+            const resLoc = await fetch('/api/locations');
+            const locations = await resLoc.json();
+            
+            // 세부 장소 데이터 로드 (추가)
+            const resSpots = await fetch('/api/specific-spots');
+            cachedSpecificSpots = await resSpots.json();
+
+            // 드롭다운 옵션 채우기 (기존 로직 유지)
             const targetIds = ['origin-select', 'dest-select', 'search-origin', 'search-dest'];
             const optionsHtml = locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
             targetIds.forEach(id => {
@@ -210,7 +232,7 @@
                     el.innerHTML = `<option value="">${label} 선택(전체)</option>` + optionsHtml;
                 }
             });
-        } catch (e) { console.error("장소 로드 실패", e); }
+        } catch (e) { console.error("데이터 로드 실패", e); }
     }
 
     function setToday() {
@@ -268,6 +290,46 @@
         if(tabName === 'my') {
             renderMyRooms();
             socket.emit('request_history'); // 서버에 과거 내역 요청
+        }
+    }
+
+    // [B] 출발지 선택 시 세부 장소 드롭다운 업데이트
+    // [2] 세부 장소 업데이트 함수 (서버 데이터를 사용하도록 수정)
+    function updateSpecificSpots() {
+        const origin = document.getElementById('origin-select').value;
+        const spotSelect = document.getElementById('specific-spot-select');
+        const customInput = document.getElementById('custom-spot-input');
+        
+        spotSelect.innerHTML = '<option value="">-- 세부 장소 선택 --</option>';
+        
+        // 전역 변수 cachedSpecificSpots에서 데이터를 찾아옵니다.
+        if (cachedSpecificSpots[origin]) {
+            cachedSpecificSpots[origin].forEach(spot => {
+                const opt = document.createElement('option');
+                opt.value = spot;
+                opt.innerText = spot;
+                spotSelect.appendChild(opt);
+            });
+        }
+        
+        const customOpt = document.createElement('option');
+        customOpt.value = "custom";
+        customOpt.innerText = "직접 입력";
+        spotSelect.appendChild(customOpt);
+        
+        customInput.style.display = 'none';
+    }
+
+    // [C] '직접 입력' 선택 시 input 노출
+    function toggleCustomSpotInput() {
+        const spotSelect = document.getElementById('specific-spot-select');
+        const customInput = document.getElementById('custom-spot-input');
+        
+        if (spotSelect.value === "custom") {
+            customInput.style.display = 'block';
+            customInput.focus();
+        } else {
+            customInput.style.display = 'none';
         }
     }
 
@@ -346,8 +408,28 @@
         const dest = document.getElementById('dest-select').value;
         const date = document.getElementById('date-input').value;
         const time = document.getElementById('time-input').value;
+        const maxPax = document.getElementById('max-pax-select').value; 
+
+        // 세부 장소 결정 로직
+        const spotSelect = document.getElementById('specific-spot-select');
+        const customInput = document.getElementById('custom-spot-input');
+        let specificSpot = spotSelect.value;
+        
+        if (specificSpot === "custom") {
+            specificSpot = customInput.value;
+        }
+        
         if(!origin || !dest || !date || !time) return alert("모든 정보를 입력해주세요!");
-        socket.emit('create_room', { origin, dest, date, time });
+        
+        // 서버로 데이터 전송 (specificSpot 추가)
+        socket.emit('create_room', { 
+            origin, 
+            dest, 
+            date, 
+            time, 
+            specificLocation: specificSpot,
+            maxPax: parseInt(maxPax)
+        });
         closeCreateModal();
     }
 
@@ -364,8 +446,32 @@
     }
 
     function completePayment(roomId) { if(confirm("정산 완료 후 방을 삭제할까요?")) socket.emit('complete_payment', { roomId }); }
-    function copyAccount(acc) { navigator.clipboard.writeText(acc).then(() => alert("계좌번호 복사됨")); }
 
+    function copyAccount(acc) {
+        const textArea = document.createElement("textarea");
+        textArea.value = acc;
+        // 화면에 보이지 않게 처리
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, 99999); // 모바일 대응
+        
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                alert("계좌번호가 복사되었습니다: " + acc);
+            } else {
+                alert("복사 실패 (브라우저 보안 설정)");
+            }
+        } catch (err) {
+            alert("복사 중 오류 발생");
+        }
+        document.body.removeChild(textArea);
+    }
     // [6] 핵심 렌더링 엔진
     function renderMyRooms() {
         const myRooms = allRoomsData.filter(room => {
@@ -373,6 +479,27 @@
             return ps.includes(myId);
         });
         renderRooms(myRooms, null, 'my-room-list');
+    }
+
+    function openToss(bank, account) {
+        // 토스 송금 스킴: 입금계좌번호와 은행명을 파라미터로 보냄
+        // 참고: 은행명은 토스에서 인식 가능한 규격이어야 하지만, 
+        // 보통 계좌번호만 넘겨도 토스 앱이 열리면서 붙여넣기 모드가 활성화됩니다.
+        const tossUrl = `supertoss://send?bank=${bank}&account=${account}`;
+        
+        // 모바일 환경 체크 후 이동
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+            window.location.href = tossUrl;
+            // 앱이 없을 경우를 대비해 약간의 시차를 두고 안내 (선택 사항)
+            setTimeout(() => {
+                if (confirm("토스 앱으로 이동하지 못했습니다. 앱이 설치되어 있나요?")) {
+                    window.location.href = "https://toss.im";
+                }
+            }, 1500);
+        } else {
+            alert("토스 송금은 모바일 환경에서만 지원됩니다. 계좌 복사를 이용해주세요!");
+        }
     }
 
     function renderRooms(rooms, searchCriteria, targetId) {
@@ -400,52 +527,116 @@
         rooms.forEach(room => {
             const ps = room.participantList ? room.participantList.split(',') : [];
             const isJoined = ps.includes(myId);
-            const isFull = room.currentPax >= room.maxPax;
             const isPast = (room.date < curD) || (room.date === curD && room.time < curT);
-
+            const remaining = room.maxPax - room.currentPax; // 남은 자리 계산
+            const isFull = remaining <= 0; // 만차 여부 계산
             const isNearbyO = isSearchMode && currentSearchCriteria.origin && room.origin !== currentSearchCriteria.origin;
             const isNearbyD = isSearchMode && currentSearchCriteria.dest && room.dest !== currentSearchCriteria.dest;
             const originTxt = `${room.origin}${isNearbyO ? ' <small style="color:var(--accent); font-weight:bold;">(인근)</small>' : ''}`;
             const destTxt = `${room.dest}${isNearbyD ? ' <small style="color:var(--accent); font-weight:bold;">(인근)</small>' : ''}`;
+            const specificTxt = room.specificLocation ? `<br><small style="color:var(--accent); font-size:11px;">📍 ${room.specificLocation}</small>` : '';
+
+            let paxClass = "pax-safe";
+            let statusText = `${remaining}자리 남음`;
 
             if (room.date !== lastDate) {
                 html += `<div class="section-title">📅 ${room.date}</div>`;
                 lastDate = room.date;
             }
 
+            if (isFull) {
+                paxClass = "pax-full";
+                statusText = "마감";
+            } else if (remaining === 1) {
+                paxClass = "pax-warning";
+                statusText = "마지막 1자리!";
+            }
+
             let paySection = "";
+
             if (room.payAmount > 0 && isJoined) {
-                const sAmt = Math.floor(room.payAmount / room.currentPax);
+                const totalPeople = parseInt(room.currentPax) || 1;
+                const totalAmount = parseInt(room.payAmount) || 0;
+                const splitAmount = Math.floor(totalAmount / totalPeople);
+
+                const isPayer = (room.payerId === myId); // 내가 결제자인지 확인
+
                 paySection = `
-                    <div class="payment-notice-box">
-                        <strong>💰 인당 ${sAmt.toLocaleString()}원</strong><br>
-                        ${room.payerId} | ${room.payBank} <code>${room.payAccount}</code>
-                        <button class="toss-btn" onclick="copyAccount('${room.payAccount}')">계좌 복사</button>
-                        ${room.payerId === myId ? `<button class="toss-btn" onclick="completePayment(${room.id})" style="background:var(--accent); margin-top:8px; color:white;">정산 완료 확정</button>` : ''}
-                    </div>`;
+                <div class="payment-notice-box" style="margin-top: 15px; padding: 12px; background: rgba(122, 170, 232, 0.1); border-radius: 8px; border-left: 3px solid var(--accent);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong style="color: #c8d6f0; font-size: 14px;">💰 ${isPayer ? '회수할 금액' : '송금할 금액'}</strong>
+                        <span style="color: var(--accent); font-weight: 800; font-size: 16px;">
+                            ${splitAmount.toLocaleString()}원
+                        </span>
+                    </div>
+                    
+                    <div style="font-size: 11px; color: #5a6680; margin-bottom: 10px;">
+                        <span style="color: #7aaae8; font-weight: bold;">${room.payerId}</span> | ${room.payBank} 
+                        <code style="background: #1a1f2c; padding: 2px 4px; border-radius: 3px; color: #eee;">${room.payAccount}</code>
+                    </div>
+
+                    <div style="display: flex; gap: 6px;">
+                        ${!isPayer ? `
+                            <button class="toss-btn" onclick="copyAccount('${room.payAccount}')" style="flex: 1; padding: 8px 0; font-size: 11px; background: #313d4f;">
+                                <i class="fas fa-copy"></i> 계좌 복사
+                            </button>
+                            <button class="toss-btn" onclick="openToss('${room.payBank}', '${room.payAccount}')" style="flex: 1; padding: 8px 0; font-size: 11px; background: #0064ff; color: white; border: none;">
+                                <i class="fas fa-paper-plane"></i> 토스 송금
+                            </button>
+                        ` : `
+                            <button class="toss-btn" onclick="completePayment(${room.id})" style="flex: 1; background: var(--accent); color: white; padding: 10px 0; font-size: 12px; border: none; font-weight: bold;">
+                                모든 인원 입금 완료 (방 폭파)
+                            </button>
+                        `}
+                    </div>
+                </div>`;
             }
 
             html += `
-                <div class="card ${isJoined ? 'my-room' : ''}" style="${isPast ? 'opacity:0.5;' : ''}">
-                    <span class="room-id-badge">#${room.id.toString().padStart(3,'0')} ${isPast ? '(종료)' : ''}</span>
-                    <div class="room-item">
-                        <div class="room-info">
-                            <div class="room-time">${room.time} ${isJoined ? '<span class="my-badge">참여 중</span>' : ''}</div>
-                            <div class="room-path">${originTxt} → ${destTxt}</div>
-                            <div class="room-meta">인원 <strong>${room.currentPax}/${room.maxPax}</strong></div>
-                        </div>
-                        <div style="display:flex; flex-direction:column; gap:8px;">
-                            ${isJoined ? 
-                                `<button class="btn-join" onclick="openPayModal(${room.id})" style="background:linear-gradient(135deg, #2e7d52 0%, #1e5c3a 100%);">결제 등록</button>
-                                 <button class="btn-join" onclick="cancelJoin(${room.id})" style="background:#4a5568;">취소</button>` : 
-                                `<button class="btn-join" onclick="joinRoom(${room.id})" ${isFull || isPast ? 'disabled style="opacity:0.3"' : ''}>
-                                    ${isPast ? '종료' : (isFull ? '만차' : '합승')}
-                                </button>`
-                            }
+            <div class="card ${isJoined ? 'my-room' : ''}" style="${isPast ? 'opacity:0.5;' : ''} padding: 12px 15px;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                    <div style="font-size: 10px; color: #5a6680; font-family: monospace; align-self: center;">
+                        #${room.id.toString().padStart(3,'0')} ${isPast ? '(종료)' : ''}
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 11px; color: var(--accent); font-weight: 800; letter-spacing: -0.3px;">
+                            ${room.roomName || '대기 중...'}
                         </div>
                     </div>
-                    ${paySection}
-                </div>`;
+                </div>
+
+                <div class="room-item" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="room-info" style="flex: 1; padding-right: 10px;">
+                        <div class="room-time" style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">
+                            ${room.time} ${isJoined ? '<span class="my-badge" style="font-size: 10px; vertical-align: middle; margin-left: 5px;">참여 중</span>' : ''}
+                        </div>
+                        <div class="room-path" style="font-size: 13px; line-height: 1.4; color: #c8d6f0;">
+                            ${originTxt} ➔ ${destTxt}
+                            ${specificTxt}
+                        </div>
+                        <div class="room-meta" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                            <span class="pax-badge ${paxClass}" style="padding: 2px 6px; border-radius: 4px; font-size: 10px; min-width: 35px; text-align: center;">
+                                ${room.currentPax} / ${room.maxPax}
+                            </span>
+                            <strong style="color:${isFull ? '#ff4d4d' : '#7aaae8'}; font-size: 12px;">
+                                ${statusText}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 6px; min-width: 85px;">
+                        ${isJoined ? 
+                            `<button class="btn-join" onclick="openPayModal(${room.id})" style="background:linear-gradient(135deg, #2e7d52 0%, #1e5c3a 100%); font-size: 11px; padding: 7px 0; border-radius: 6px;">결제 등록</button>
+                            <button class="btn-join" onclick="cancelJoin(${room.id})" style="background:#4a5568; font-size: 11px; padding: 7px 0; border-radius: 6px;">취소</button>` : 
+                            `<button class="btn-join" onclick="joinRoom(${room.id})" ${isFull || isPast ? 'disabled style="opacity:0.3"' : ''} style="font-size: 12px; padding: 12px 0; border-radius: 6px;">
+                                ${isPast ? '종료' : (isFull ? '만차' : '합승')}
+                            </button>`
+                        }
+                    </div>
+                </div>
+                ${paySection}
+            </div>`;
         });
         targetDiv.innerHTML = html;
     }

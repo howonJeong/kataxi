@@ -35,6 +35,26 @@ const NEARBY_MAP = {
     // 이런 식으로 인근 지역들을 리스트로 묶어서.
 };
 
+const SPECIFIC_SPOTS = {
+    "Pyeongtaek Stn": ["1번 출구(동부) 편의점 앞", "2번 출구(서부) 택시승강장"],
+    "Pyeongtaek-Jije Stn": ["1번 출구 에스컬레이터 앞", "SRT 매표소 앞", "2번 출구 주차장"],
+    "Warrior Zone": ["입구 흡연장 옆", "주차장 입구", "내부 소파 구역"],
+    "P6060": ["주차장 입구", "건물 정문 앞"],
+    "Pacific Victors Chapel": ["교회 정문 계단", "주차장 끝부분"],
+    "Pedestrian Gate": ["게이트 안쪽 벤치", "CPX 쪽 보도"],
+    "Main PX": ["푸드코트 입구", "택시 승강장", "커미서리 쪽 주차장"],
+    "Provider DFAC": ["식당 정문 앞", "주차장 입구"],
+    "Maude Hall": ["건물 메인 로비 앞", "주차장 깃대 아래"],
+    "Turner Gym": ["체육관 입구", "수영장 쪽 주차장"],
+    "Talon DFAC": ["식당 입구 벤치", "주차장"],
+    "Spartan DFAC": ["식당 정문", "옆쪽 주차구역"],
+    "8th Army": ["버스 정류장", "주차장"],
+    "USFK Parking Lot": ["바이크 랙", "스모킹 스테이션"],
+    "CFC(Wa Mart)": ["와마트 입구", "주차장 끝"],
+    "KTA": ["터프 앞", "황무지"],
+    "Balboni Field": ["관중석 입구", "트랙 시작점"]
+};
+
 /*
     for (let loc in NEARBY_MAP) {
         NEARBY_MAP[loc].forEach(near => {
@@ -71,6 +91,7 @@ let db;
             origin TEXT,
             dest TEXT,
             time TEXT,
+            specificLocation TEXT,
             maxPax INTEGER DEFAULT 4,
             payAmount INTEGER DEFAULT 0,  -- 결제 금액
             payBank TEXT,                 -- 은행
@@ -130,6 +151,9 @@ async function broadcastRooms() {
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/locations', (req, res) => res.json(LOCATIONS));
+app.get('/api/specific-spots', (req, res) => {
+    res.json(SPECIFIC_SPOTS);
+});
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
@@ -170,16 +194,15 @@ io.on('connection', (socket) => {
     socket.on('create_room', async (data) => {
         if (!socket.userId) return;
         try {
-            const { date, origin, dest, time } = data;
-            
-            // 랜덤 이름 조합 생성
+            // [수정] specificLocation을 구조 분해 할당으로 받음
+            const { date, origin, dest, time, specificLocation, maxPax } = data;
             const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
             const ani = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
             const roomName = `${adj} ${ani}`;
-
+            
             const result = await db.run(
-                `INSERT INTO rooms (roomName, creatorId, date, origin, dest, time) VALUES (?, ?, ?, ?, ?, ?)`,
-                [roomName, socket.userId, date, origin, dest, time]
+                `INSERT INTO rooms (roomName, creatorId, date, origin, dest, specificLocation, time, maxPax) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [roomName, socket.userId, date, origin, dest, specificLocation, time, maxPax || 4]
             );
             
             await db.run(`INSERT INTO participants (roomId, userId) VALUES (?, ?)`, [result.lastID, socket.userId]);
