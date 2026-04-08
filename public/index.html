@@ -42,12 +42,18 @@
 
 <div id="main-app" class="container" style="display: none;">
     
-    <div class="kitsch-header">
-        <div class="user-info-box">
+    <div class="kitsch-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+        <div class="user-info-box" style="margin: 0;">
             <div class="user-status">
-                <span id="header-user-id" class="user-id">똑똑한 청년.</span>님 접속 중
+                <span id="header-user-id" class="user-id">똑똑한 청년.</span>님
             </div>
-            <div class="logout-badge" onclick="logout()">EXIT</div>
+        </div>
+        
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <div onclick="shareApp()" style="cursor: pointer; color: var(--accent); font-size: 18px; background: rgba(122, 170, 232, 0.1); padding: 8px; border-radius: 8px;">
+                <i class="fas fa-arrow-up-from-bracket"></i>
+            </div>
+            <div class="logout-badge" onclick="logout()" style="margin: 0;">EXIT</div>
         </div>
     </div>
     
@@ -481,6 +487,29 @@
         renderRooms(myRooms, null, 'my-room-list');
     }
 
+    function shareApp() {
+        const shareData = {
+            title: 'KATCHI-TAPSIDA | 같이탑시다',
+            text: '단결! 캠프 험프리스 전우를 위한 스마트 카풀 서비스 [가치-탑시다]입니다. 지금 접속해서 카풀을 제안하거나 합승해보세요! 🚕',
+            url: window.location.origin // 현재 도메인 주소 자동 추출
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData)
+            .then(() => console.log('공유 완료'))
+            .catch((error) => console.log('공유 취소', error));
+        } else {
+            // 복사 방식 대응
+            const textArea = document.createElement("textarea");
+            textArea.value = `${shareData.text}\n${shareData.url}`;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert("서비스 주소와 홍보 문구가 복사되었습니다!\n단톡방에 붙여넣어 전우들에게 알려주세요! 🫡");
+        }
+    }
+    
     function openToss(bank, account) {
         // 토스 송금 스킴: 입금계좌번호와 은행명을 파라미터로 보냄
         // 참고: 은행명은 토스에서 인식 가능한 규격이어야 하지만, 
