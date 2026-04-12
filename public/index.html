@@ -532,10 +532,10 @@
 
     function shareApp() {
         
-        const shareText = `[KATCHI-TAPSIDA] 가치-탑시다 🚕
+        const shareText = `[KATCHI-TAPSIDA] 가치-탑시다
         
-    캠프 험프리스에서 복무하는 카투사들을 위한 카풀 서비스입니다.\
-    🔗 ${window.location.origin}`;
+    캠프 험프리스에서 복무하는 카투사들을 위한 카풀 서비스입니다.'\
+    `;
 
         if (navigator.share) {
             navigator.share({
@@ -569,7 +569,6 @@
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         if (isMobile) {
             window.location.href = tossUrl;
-            // 앱이 없을 경우를 대비해 약간의 시차를 두고 안내 (선택 사항)
             setTimeout(() => {
                 if (confirm("토스 앱으로 이동하지 못했습니다. 앱이 설치되어 있나요?")) {
                     window.location.href = "https://toss.im";
