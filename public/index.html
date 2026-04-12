@@ -16,7 +16,7 @@
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://your-domain.com"> <meta property="og:title" content="🚕 KATCHI-TAPSIDA! | 같이탑시다">
-    <meta property="og:description" content="단결! 저와 함꼐 카풀하실 분을 찾습니다.">
+    <meta property="og:description" content="단결! 열일하는 전우님들을 위한 택시 카풀 서비스입니다">
     
     <meta property="og:image" content="https://your-domain.com/og-image.png">
     <meta property="og:image:width" content="800">
@@ -493,8 +493,8 @@
     function shareApp() {
         const shareData = {
             title: 'KATCHI-TAPSIDA | 같이탑시다',
-            text: '단결! 캠프 험프리스 전우를 위한 스마트 카풀 서비스 [가치-탑시다]입니다. 지금 접속해서 카풀을 제안하거나 합승해보세요! 🚕',
-            url: window.location.origin // 현재 도메인 주소 자동 추출
+            text: '단결! 전우를 위한 스마트 카풀 서비스 [가치-탑시다]입니다. 지금 접속해서 카풀을 제안하거나 합승해보세요!',
+            url: window.location.origin
         };
 
         if (navigator.share) {
@@ -509,7 +509,7 @@
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            alert("서비스 주소와 홍보 문구가 복사되었습니다!\n단톡방에 붙여넣어 전우들에게 알려주세요! 🫡");
+            alert("서비스 주소와 홍보 문구가 복사되었습니다!\n전우들에게 알려주세요!");
         }
     }
     
