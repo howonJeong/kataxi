@@ -279,7 +279,11 @@ io.on('connection', (socket) => {
             await db.run(`INSERT INTO participants (roomId, userId) VALUES (?, ?)`, [roomId, socket.userId]);
             broadcastRooms();
         } catch (e) {
-            socket.emit('error_msg', '이미 참여 중인 카풀입니다.');
+            if (e.message && e.message.includes('UNIQUE constraint failed')) {
+                socket.emit('error_msg', '이미 참여 중인 카풀입니다.');
+            } else {
+                socket.emit('error_msg', '참여 처리 중 오류가 발생했습니다.');
+            }
         }
     });
 
@@ -309,6 +313,11 @@ io.on('connection', (socket) => {
                 }
             }
             
+            await db.run(
+                `UPDATE rooms SET payAmount=0, payBank=NULL, payAccount=NULL, payerId=NULL WHERE id=? AND payerId=?`,
+                [roomId, socket.userId]
+            );
+
             broadcastRooms();
         } catch (e) {
             console.error("취소 처리 중 에러:", e);
@@ -385,8 +394,8 @@ io.on('connection', (socket) => {
             console.log(`[정산완료/폭파] 방 ID: ${roomId} 기록 완료`);
             
             // 4. 즉시 갱신 신호 발송
-            io.emit('update_rooms', { rooms: [] }); // 전체 갱신 트리거
-            io.emit('history_updated'); 
+            await broadcastRooms();
+            io.emit('history_updated');
             
         } catch (e) {
             console.error("정산 완료 처리 에러:", e);
