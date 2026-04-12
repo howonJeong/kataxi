@@ -531,25 +531,31 @@
     }
 
     function shareApp() {
-        const shareData = {
-            title: 'KATCHI-TAPSIDA | 같이탑시다',
-            text: '카투사를 위한 택시 카풀 서비스 [가치-탑시다]입니다. 지금 접속해서 카풀을 제안하거나 합승해보세요!',
-            url: window.location.origin
-        };
+        
+        const shareText = `[KATCHI-TAPSIDA] 가치-탑시다 🚕
+        
+    캠프 험프리스에서 복무하는 카투사들을 위한 카풀 서비스입니다.\
+    🔗 ${window.location.origin}`;
 
         if (navigator.share) {
-            navigator.share(shareData)
-            .then(() => console.log('공유 완료'))
-            .catch((error) => console.log('공유 취소', error));
+            navigator.share({
+                title: 'KATCHI-TAPSIDA',
+                text: shareText,
+                url: window.location.origin
+            }).catch(err => console.log('공유 취소됨', err));
         } else {
             // 복사 방식 대응
             const textArea = document.createElement("textarea");
-            textArea.value = `${shareData.text}\n${shareData.url}`;
+            textArea.value = shareText;
             document.body.appendChild(textArea);
             textArea.select();
-            document.execCommand('copy');
+            try {
+                document.execCommand('copy');
+                alert("홍보 문구가 복사되었습니다! 단톡방에 붙여넣어주세요. 🫡");
+            } catch (err) {
+                alert("복사 실패");
+            }
             document.body.removeChild(textArea);
-            alert("서비스 주소와 홍보 문구가 복사되었습니다!\n전우들에게 알려주세요!");
         }
     }
     
