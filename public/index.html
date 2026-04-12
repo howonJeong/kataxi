@@ -42,18 +42,21 @@
 
 <div id="main-app" class="container" style="display: none;">
     
-    <div class="kitsch-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
-        <div class="user-info-box" style="margin: 0;">
-            <div class="user-status">
-                <span id="header-user-id" class="user-id">똑똑한 청년.</span>님
+    <div class="kitsch-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; height: 60px; box-sizing: border-box; gap: 10px;">
+        <div class="user-info-box" style="margin: 0; flex: 1; min-width: 0; overflow: hidden;">
+            <div class="user-status" style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <span id="header-user-id" class="user-id" style="font-weight: 800; color: var(--accent);">똑똑한 청년.</span>님
             </div>
         </div>
         
-        <div style="display: flex; gap: 12px; align-items: center;">
-            <div onclick="shareApp()" style="cursor: pointer; color: var(--accent); font-size: 18px; background: rgba(122, 170, 232, 0.1); padding: 8px; border-radius: 8px;">
-                <i class="fas fa-arrow-up-from-bracket"></i>
+        <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+            <div onclick="shareApp()" style="cursor: pointer; display: flex; align-items: center; gap: 4px; background: #fee500; color: #3c1e1e; padding: 6px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <i class="fas fa-external-link-alt" style="font-size: 10px;"></i> 공유
             </div>
-            <div class="logout-badge" onclick="logout()" style="margin: 0;">EXIT</div>
+            
+            <div class="logout-badge" onclick="logout()" style="margin: 0; padding: 6px 10px; font-size: 10px; border: 1px solid #4a5568; border-radius: 8px; white-space: nowrap; height: auto; line-height: 1;">
+                EXIT
+            </div>
         </div>
     </div>
     
