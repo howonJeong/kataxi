@@ -531,31 +531,18 @@
     }
 
     function shareApp() {
-        
-        const shareText = `[KATCHI-TAPSIDA] 가치-탑시다
-        
-    캠프 험프리스에서 복무하는 카투사들을 위한 카풀 서비스입니다.'\
-    `;
+        const shareText = `[KATCHI-TAPSIDA]
+    험프리스 카투사들을 위한 카풀 서비스입니다.`;
 
+        executeShare(shareText, window.location.origin);
+    }
+
+    function executeShare(text, url) {
         if (navigator.share) {
-            navigator.share({
-                title: 'KATCHI-TAPSIDA',
-                text: shareText,
-                url: window.location.origin
-            }).catch(err => console.log('공유 취소됨', err));
+            navigator.share({ title: 'KATCHI-TAPSIDA', text: text, url: url })
+            .catch(err => console.log('공유 취소'));
         } else {
-            // 복사 방식 대응
-            const textArea = document.createElement("textarea");
-            textArea.value = shareText;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                alert("홍보 문구가 복사되었습니다! 단톡방에 붙여넣어주세요. 🫡");
-            } catch (err) {
-                alert("복사 실패");
-            }
-            document.body.removeChild(textArea);
+            copyToClipboard(text + "\n" + url);
         }
     }
     
