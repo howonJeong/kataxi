@@ -41,12 +41,32 @@
 </div>    
 
 <div id="main-app" class="container" style="display: none;">
-    
+
+    <div id="guide-modal" class="modal-overlay" style="display: none; z-index: 6000;">
+        <div class="card modal-content" style="max-width: 320px; text-align: left;">
+            <h3 style="color: var(--accent); margin-bottom: 15px;">이용 가이드</h3>
+            
+            <div style="font-size: 13px; color: #c8d6f0; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">
+                <p><strong>1. 합승하기:</strong> 목록에서 원하는 방의 [합승] 버튼을 누르면 참여됩니다.</p>
+                <p><strong>2. 검색하기:</strong> 특정한 시간대나 목적지의 카풀을 찾고 싶다면, 검색 필터를 맞춰주세요. 초기화를 통해 다시 모든 카풀을 볼 수 있습니다.</p>
+                <p><strong>3. 제안하기:</strong> 그래도 원하는 일정이 없다면, 하단의 [+] 버튼을 눌러 카풀 방을 만듭니다. 집합 장소를 정하고 당일에 모이면 됩니다.</p>
+                <p><strong>4. 정산하기:</strong> 목적지 도착 후, 인원 중 결제자가 총 금액과 계좌를 등록하면 수에 맞게 <strong>더치페이</strong>된 금액이 표시됩니다.</p>
+                <p><strong>5. 공유하기:</strong> 상단 [공유] 버튼을 통해 전우들에게 이 서비스를 알려주세요!</p>
+            </div>
+
+            <button class="btn-primary" onclick="closeGuideModal()" style="margin-top: 25px; width: 100%;">확인했습니다 🫡</button>
+        </div>
+    </div>
+
     <div class="kitsch-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; height: 60px; box-sizing: border-box; gap: 10px;">
         <div class="user-info-box" style="margin: 0; flex: 1; min-width: 0; overflow: hidden;">
             <div class="user-status" style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 <span id="header-user-id" class="user-id" style="font-weight: 800; color: var(--accent);">똑똑한 청년.</span>님
             </div>
+        </div>
+        
+        <div onclick="openGuideModal()" style="cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; border: 1px solid rgba(255,255,255,0.2);">
+            <i class="fas fa-question"></i>
         </div>
         
         <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
@@ -267,19 +287,39 @@
     socket.on('login_success', (data) => {
         myId = data.userId;
         const pwInput = document.getElementById('user-pw').value;
+
+        // [체크] 입력창에 비번이 있다면 '수동 로그인'이므로 가이드를 보여줌
+        const showGuide = pwInput !== "";
+
         if (pwInput) {
             localStorage.setItem('auto_id', myId);
             localStorage.setItem('auto_pw', pwInput);
         }
+
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         const headerIdEl = document.getElementById('header-user-id');
         
         if(headerIdEl) headerIdEl.innerText = myId;
         
-        initSetup(); setToday();
+        initSetup(); 
+        setToday();
         socket.emit('request_init_rooms');
+
+        // 자동 로그인이 아닐 때만 팝업 노출
+        if (showGuide) {
+            openGuideModal();
+        }
     });
+
+    // 모달 제어 함수
+    function openGuideModal() {
+        document.getElementById('guide-modal').style.display = 'flex';
+    }
+
+    function closeGuideModal() {
+        document.getElementById('guide-modal').style.display = 'none';
+    }
 
     socket.on('error_msg', (msg) => alert(msg));
 
