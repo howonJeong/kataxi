@@ -531,7 +531,7 @@
 
     function shareApp() {
         const shareText = `[KATCHI-TAPSIDA]
-    험프리스 카투사들을 위한 카풀 서비스입니다.`;
+    험프리스 카투사들을 위한 카풀 서비스입니다`;
 
         executeShare(shareText, window.location.origin);
     }
@@ -547,8 +547,6 @@
     
     function openToss(bank, account) {
         // 토스 송금 스킴: 입금계좌번호와 은행명을 파라미터로 보냄
-        // 참고: 은행명은 토스에서 인식 가능한 규격이어야 하지만, 
-        // 보통 계좌번호만 넘겨도 토스 앱이 열리면서 붙여넣기 모드가 활성화됩니다.
         const tossUrl = `supertoss://send?bank=${bank}&account=${account}`;
         
         // 모바일 환경 체크 후 이동
