@@ -15,7 +15,7 @@
     <title>가치-탑시다!</title>
 
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://your-domain.com"> <meta property="og:title" content="KATCHI-TAPSIDA! | 같이탑시다">
+    <meta property="og:url" content="https://KATCHI-TAPSIDA.com"> <meta property="og:title" content="KATCHI-TAPSIDA! | 같이탑시다">
     
     <meta property="og:image" content="https://your-domain.com/og-image.png">
     <meta property="og:image:width" content="800">
@@ -465,11 +465,16 @@
         
         if (specificSpot === "custom") {
             specificSpot = customInput.value;
-        }
-        
-        if(!origin || !dest || !date || !time) return alert("모든 정보를 입력해주세요!");
-        
-        // 서버로 데이터 전송 (specificSpot 추가)
+        }       
+
+        if (!origin || !dest || !date || !time) return alert("모든 정보를 입력해주세요!");
+         
+        if (origin === dest) return alert("출발지와 목적지가 같습니다!");
+
+        const today = new Date().toISOString().split('T')[0];
+        if (date < today) return alert("오늘 이후 날짜만 선택할 수 있습니다.");
+    
+
         socket.emit('create_room', { 
             origin, 
             dest, 
@@ -489,6 +494,10 @@
         const bank = document.getElementById('pay-bank').value;
         const account = document.getElementById('pay-account').value;
         if(!amount || !account) return alert("금액과 계좌번호를 입력하세요.");
+        const safeAmount = parseInt(amount);
+        if (isNaN(safeAmount) || safeAmount <= 0 || safeAmount > 10000000) {
+            return socket.emit('error_msg', '올바른 금액을 입력해주세요.');
+        }
         socket.emit('submit_payment', { roomId: currentRoomIdForPay, amount, bank, account });
         closePayModal();
     }
@@ -538,13 +547,20 @@
 
     function executeShare(text, url) {
         if (navigator.share) {
-            navigator.share({ title: 'KATCHI-TAPSIDA', text: text, url: url })
-            .catch(err => console.log('공유 취소'));
+            navigator.share({ title: 'KATCHI-TAPSIDA', text, url })
+                .catch(err => console.log('공유 취소'));
         } else {
-            copyToClipboard(text + "\n" + url);
+            const textArea = document.createElement("textarea");
+            textArea.value = text + "\n" + url;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert("주소가 복사되었습니다!");
         }
     }
-    
     function openToss(bank, account) {
         // 토스 송금 스킴: 입금계좌번호와 은행명을 파라미터로 보냄
         const tossUrl = `supertoss://send?bank=${bank}&account=${account}`;
@@ -638,7 +654,7 @@
 
                     <div style="display: flex; gap: 6px;">
                         ${!isPayer ? `
-                            <button class="toss-btn" onclick="copyAccount('${room.payBank} ${room.payAccount}')" style="flex: 1; padding: 8px 0; font-size: 11px; background: #313d4f;">
+                            <button class="toss-btn" data-account="${room.payBank} ${room.payAccount}" style="flex: 1; padding: 8px 0; font-size: 11px; background: #313d4f;">
                                 <i class="fas fa-copy"></i> 계좌 복사
                             </button>
                             <button class="toss-btn" onclick="openToss('${room.payBank}', '${room.payAccount}')" style="flex: 1; padding: 8px 0; font-size: 11px; background: #0064ff; color: white; border: none;">
@@ -704,7 +720,10 @@
 
     // 1분마다 자동 갱신 (검색 중 아닐 때)
     setInterval(() => { if (myId && !isSearchMode) socket.emit('request_init_rooms'); }, 60000);
-
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.toss-btn[data-account]');
+        if (btn) copyAccount(btn.dataset.account);
+    });
     window.onload = function() { checkAutoLogin(); };
 </script>
 

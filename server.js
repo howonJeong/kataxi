@@ -1,15 +1,17 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const bcrypt = require('bcrypt');
 const path = require('path');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
+
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = 3000;
 const LOCATIONS = ["Warrior Zone", "P6060", "Pacific Victors Chapel", "Pedestrian Gate", "Main PX", "Provider DFAC","Maude Hall" , "Turner Gym", "Talon DFAC", "Spartan DFAC", "8th Army", "USFK Parking Lot", "CFC(Wa Mart)", "KTA", "Balboni Field", "Pyeongtaek Stn", "Pyeongtaek-Jije Stn"];
 
 const NEARBY_MAP = {
@@ -75,6 +77,9 @@ let db;
         filename: './carpool.db',
         driver: sqlite3.Database
     });
+
+    await db.exec(`PRAGMA journal_mode=WAL;`);
+    await db.exec(`PRAGMA foreign_keys=ON;`);
 
     await db.exec(`
         CREATE TABLE IF NOT EXISTS users (
@@ -161,6 +166,7 @@ io.on('connection', (socket) => {
     // 로그인 시도
     socket.on('login', async (data) => {
         const { userId, userPw } = data;
+
         if (!userId || !userPw) return;
 
         try {
@@ -168,18 +174,19 @@ io.on('connection', (socket) => {
 
             if (!user) {
                 // 1. 신규 가입
-                await db.run('INSERT INTO users (userId, password) VALUES (?, ?)', [userId, userPw]);
+                const hash = await bcrypt.hash(userPw, 10);
+                await db.run('INSERT INTO users (userId, password) VALUES (?, ?)', [userId, hash]);
                 socket.userId = userId;
                 socket.emit('login_success', { userId, msg: "새 계정이 생성되었습니다!" });
                 console.log(`[신규가입] ${userId}`);
-            } else if (user.password === userPw) {
-                // 2. 기존 유저 로그인 성공
-                socket.userId = userId;
-                socket.emit('login_success', { userId, msg: "환영합니다!" });
-                console.log(`[로그인] ${userId}`);
             } else {
-                // 3. 아이디는 맞는데 비번이 틀림 (아이디 중복 상황)
-                socket.emit('error_msg', "이미 존재하는 아이디입니다. 비밀번호를 확인하거나 다른 아이디를 사용하세요.");
+                const match = await bcrypt.compare(userPw, user.password);
+                if (match) {
+                    socket.userId = userId;
+                    socket.emit('login_success', { userId });
+                } else {
+                    socket.emit('error_msg', '비밀번호가 틀렸습니다.');
+                }
             }
         } catch (e) { 
             console.error(e);
@@ -294,33 +301,40 @@ io.on('connection', (socket) => {
         const { roomId } = data;
 
         try {
-            // 1. 참여자 명단에서 나만 삭제
-            const result = await db.run(
-                `DELETE FROM participants WHERE roomId = ? AND userId = ?`, 
+            // 1. 내가 결제자라면 먼저 정산 정보 초기화 (방이 살아있을 때 해야 함)
+            await db.run(
+                `UPDATE rooms SET payAmount=0, payBank=NULL, payAccount=NULL, payerId=NULL 
+                WHERE id=? AND payerId=?`,
                 [roomId, socket.userId]
             );
-            
+
+            // 2. 참여자 명단에서 나를 삭제
+            const result = await db.run(
+                `DELETE FROM participants WHERE roomId = ? AND userId = ?`,
+                [roomId, socket.userId]
+            );
+
             if (result.changes > 0) {
                 console.log(`[취소] ${socket.userId}가 방(ID: ${roomId})에서 나감`);
-                
-                // 2. 핵심: 방에 남은 인원이 한 명도 없는지 확인
-                const left = await db.get(`SELECT COUNT(*) as cnt FROM participants WHERE roomId = ?`, [roomId]);
-                
+
+                // 3. 방에 남은 인원 확인
+                const left = await db.get(
+                    `SELECT COUNT(*) as cnt FROM participants WHERE roomId = ?`, 
+                    [roomId]
+                );
+
+                // 4. 아무도 없으면 방 삭제
                 if (left && left.cnt === 0) {
-                    // 아무도 없으면 그때 방을 삭제
                     await db.run(`DELETE FROM rooms WHERE id = ?`, [roomId]);
                     console.log(`[방 자동삭제] 참여자가 없어 방(ID: ${roomId})이 사라짐`);
                 }
             }
-            
-            await db.run(
-                `UPDATE rooms SET payAmount=0, payBank=NULL, payAccount=NULL, payerId=NULL WHERE id=? AND payerId=?`,
-                [roomId, socket.userId]
-            );
 
             broadcastRooms();
+
         } catch (e) {
             console.error("취소 처리 중 에러:", e);
+            socket.emit('error_msg', '취소 처리 중 오류가 발생했습니다.');
         }
     });
 
@@ -339,6 +353,11 @@ io.on('connection', (socket) => {
             
             if (!isParticipant) {
                 return socket.emit('error_msg', '해당 카풀 참여자만 정산을 등록할 수 있습니다.');
+            }
+
+            const safeAmount = parseInt(amount);
+            if (isNaN(safeAmount) || safeAmount <= 0) {
+                return socket.emit('error_msg', '올바른 금액을 입력해주세요.');
             }
 
             // 3. DB 업데이트
@@ -365,14 +384,16 @@ io.on('connection', (socket) => {
         if (!socket.userId) return;
 
         try {
-            // 1. 방 정보와 참여자 명단을 한 번에 가져오기
             const room = await db.get(`
                 SELECT r.*, (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId = r.id) as participantList
                 FROM rooms r WHERE r.id = ?
             `, [roomId]);
 
             if (!room || !room.participantList) return;
-
+            
+            if (room.payerId !== socket.userId) {
+               return socket.emit('error_msg', '정산 등록자만 완료 처리할 수 있습니다.');
+            }  
             const participants = room.participantList.split(',');
             const paxCount = participants.length;
             const splitAmount = Math.floor(room.payAmount / paxCount);
