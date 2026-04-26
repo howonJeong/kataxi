@@ -301,14 +301,19 @@ io.on('connection', (socket) => {
         const { roomId } = data;
 
         try {
-            // 1. 내가 결제자라면 먼저 정산 정보 초기화 (방이 살아있을 때 해야 함)
-            await db.run(
-                `UPDATE rooms SET payAmount=0, payBank=NULL, payAccount=NULL, payerId=NULL 
-                WHERE id=? AND payerId=?`,
-                [roomId, socket.userId]
-            );
+            // 방 존재 여부 먼저 확인
+            const room = await db.get(`SELECT * FROM rooms WHERE id = ?`, [roomId]);
+            if (!room) return socket.emit('error_msg', '방을 찾을 수 없습니다.');
 
-            // 2. 참여자 명단에서 나를 삭제
+            // 1. 내가 결제자면 정산 초기화
+            if (room.payerId === socket.userId) {
+                await db.run(
+                    `UPDATE rooms SET payAmount=0, payBank=NULL, payAccount=NULL, payerId=NULL WHERE id=?`,
+                    [roomId]
+                );
+            }
+
+            // 2. 참여자 삭제
             const result = await db.run(
                 `DELETE FROM participants WHERE roomId = ? AND userId = ?`,
                 [roomId, socket.userId]
@@ -317,17 +322,16 @@ io.on('connection', (socket) => {
             if (result.changes > 0) {
                 console.log(`[취소] ${socket.userId}가 방(ID: ${roomId})에서 나감`);
 
-                // 3. 방에 남은 인원 확인
                 const left = await db.get(
-                    `SELECT COUNT(*) as cnt FROM participants WHERE roomId = ?`, 
-                    [roomId]
+                    `SELECT COUNT(*) as cnt FROM participants WHERE roomId = ?`, [roomId]
                 );
 
-                // 4. 아무도 없으면 방 삭제
-                if (left && left.cnt === 0) {
+                if (left.cnt === 0) {
                     await db.run(`DELETE FROM rooms WHERE id = ?`, [roomId]);
-                    console.log(`[방 자동삭제] 참여자가 없어 방(ID: ${roomId})이 사라짐`);
+                    console.log(`[방 자동삭제] 방(ID: ${roomId}) 삭제됨`);
                 }
+            } else {
+                return socket.emit('error_msg', '참여 중인 카풀이 아닙니다.');
             }
 
             broadcastRooms();
