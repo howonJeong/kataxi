@@ -263,6 +263,41 @@
         } catch (e) { console.error("데이터 로드 실패", e); }
     }
 
+    async function registerPush() {
+        try {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+            const reg = await navigator.serviceWorker.register('/sw.js');
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+
+            const PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // 위에서 생성한 publicKey
+
+            const sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(PUBLIC_KEY)
+            });
+
+            await fetch('/api/push-subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: myId, subscription: sub })
+            });
+
+            console.log('[푸시] 구독 완료');
+        } catch (e) {
+            console.error('[푸시] 구독 실패', e);
+        }
+    }
+
+    // VAPID 공개키 변환 유틸 (필수)
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = atob(base64);
+        return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+    }
+
     function setToday() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date-input').value = today;
@@ -283,11 +318,9 @@
         socket.emit('login', { userId, userPw });
     }
 
-    socket.on('login_success', (data) => {
+    socket.on('login_success', async (data) => {
         myId = data.userId;
         const pwInput = document.getElementById('user-pw').value;
-
-        // [체크] 입력창에 비번이 있다면 '수동 로그인'이므로 가이드를 보여줌
         const showGuide = pwInput !== "";
 
         if (pwInput) {
@@ -298,17 +331,15 @@
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         const headerIdEl = document.getElementById('header-user-id');
-        
-        if(headerIdEl) headerIdEl.innerText = myId;
-        
-        initSetup(); 
+        if (headerIdEl) headerIdEl.innerText = myId;
+
+        initSetup();
         setToday();
         socket.emit('request_init_rooms');
 
-        // 자동 로그인이 아닐 때만 팝업 노출
-        if (showGuide) {
-            openGuideModal();
-        }
+        if (showGuide) openGuideModal();
+
+        await registerPush(); // 이제 정상 동작
     });
 
     // 모달 제어 함수

@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
+const webpush = require('web-push');
 
 const PORT = process.env.PORT || 3000;
 
@@ -13,6 +14,12 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const LOCATIONS = ["Warrior Zone", "P6060", "Pacific Victors Chapel", "Pedestrian Gate", "Main PX", "Provider DFAC","Maude Hall" , "Turner Gym", "Talon DFAC", "Spartan DFAC", "8th Army", "USFK Parking Lot", "CFC(Wa Mart)", "KTA", "Balboni Field", "Pyeongtaek Stn", "Pyeongtaek-Jije Stn"];
+
+webpush.setVapidDetails(
+    'mailto:getjeongwork@gmail.com',
+    'BAa6xt3nHD1Ug_Iq4wWeVyRKvF6zoIXUBzKi8UnxIaohCzKSiaBlLrjj6EdvcYJJyj3dlFTmMwI26pmQzYn-M3k',
+    'Hv7JWJDgtFrZV3VKsxEIQYC5sPn8zUf2-0y4TCvrcUU'
+);
 
 const NEARBY_MAP = {
     "P6060" : ["Spartan DFAC", "Pacific Victors Chapel", "KTA"],
@@ -80,7 +87,12 @@ let db;
 
     await db.exec(`PRAGMA journal_mode=WAL;`);
     await db.exec(`PRAGMA foreign_keys=ON;`);
-
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            userId TEXT PRIMARY KEY,
+            subscription TEXT NOT NULL
+        );
+    `);
     await db.exec(`
         CREATE TABLE IF NOT EXISTS users (
             userId TEXT PRIMARY KEY,
@@ -154,10 +166,77 @@ async function broadcastRooms() {
     } catch (err) { console.error(err); }
 }
 
+async function checkAndPushAlerts() {
+    try {
+        const now = new Date();
+        const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+
+        // 지금으로부터 55~65분 후 출발하는 방만 타겟
+        const from = new Date(kstNow.getTime() + 55 * 60 * 1000);
+        const to   = new Date(kstNow.getTime() + 65 * 60 * 1000);
+
+        const fromDate = from.toISOString().split('T')[0];
+        const fromTime = from.toISOString().split('T')[1].substring(0, 5);
+        const toDate   = to.toISOString().split('T')[0];
+        const toTime   = to.toISOString().split('T')[1].substring(0, 5);
+
+        const rooms = await db.all(`
+            SELECT r.*, 
+            (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId = r.id) as participantList
+            FROM rooms r
+            WHERE (date > ? OR (date = ? AND time >= ?))
+              AND (date < ? OR (date = ? AND time <= ?))
+        `, [fromDate, fromDate, fromTime, toDate, toDate, toTime]);
+
+        for (const room of rooms) {
+            if (!room.participantList) continue;
+            const users = room.participantList.split(',');
+
+            for (const userId of users) {
+                const row = await db.get(
+                    `SELECT subscription FROM push_subscriptions WHERE userId = ?`, [userId]
+                );
+                if (!row) continue;
+
+                try {
+                    await webpush.sendNotification(
+                        JSON.parse(row.subscription),
+                        JSON.stringify({
+                            title: '🚕 출발 1시간 전!',
+                            body: `${room.origin} → ${room.dest} | ${room.time} 출발`,
+                            url: '/'
+                        })
+                    );
+                } catch (e) {
+                    // 구독 만료 시 삭제
+                    if (e.statusCode === 410) {
+                        await db.run(`DELETE FROM push_subscriptions WHERE userId = ?`, [userId]);
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error('푸시 알림 체크 에러:', e);
+    }
+}
+
+setInterval(checkAndPushAlerts, 60 * 1000);
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/locations', (req, res) => res.json(LOCATIONS));
 app.get('/api/specific-spots', (req, res) => {
     res.json(SPECIFIC_SPOTS);
+});
+app.use(express.json());
+app.post('/api/push-subscribe', async (req, res) => {
+    if (!req.body.userId || !req.body.subscription) {
+        return res.status(400).json({ error: 'invalid' });
+    }
+    await db.run(
+        `INSERT OR REPLACE INTO push_subscriptions (userId, subscription) VALUES (?, ?)`,
+        [req.body.userId, JSON.stringify(req.body.subscription)]
+    );
+    res.json({ ok: true });
 });
 
 io.on('connection', (socket) => {
