@@ -271,7 +271,7 @@
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') return;
 
-            const PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // 위에서 생성한 publicKey
+            const PUBLIC_KEY = 'PYD-J_cMzfRtAnO_vWz3hYQJ9L23tQ4b4AZiKOvTwCetyez0_pCQQC0RcJWAskXXSu2EIUrzajMrKhHyZ9ugGc';
 
             const sub = await reg.pushManager.subscribe({
                 userVisibleOnly: true,

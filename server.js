@@ -90,17 +90,15 @@ let db;
     await db.exec(`PRAGMA journal_mode=WAL;`);
     await db.exec(`PRAGMA foreign_keys=ON;`);
     await db.exec(`
-        CREATE TABLE IF NOT EXISTS push_subscriptions (
-            userId TEXT PRIMARY KEY,
-            subscription TEXT NOT NULL
-        );
-    `);
-    await db.exec(`
         CREATE TABLE IF NOT EXISTS users (
             userId TEXT PRIMARY KEY,
             password TEXT,
             score INTEGER DEFAULT 100,
             driveCount INTEGER DEFAULT 0
+        );
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            userId TEXT PRIMARY KEY,
+            subscription TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS rooms (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
