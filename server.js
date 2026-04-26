@@ -15,10 +15,12 @@ const io = new Server(server);
 
 const LOCATIONS = ["Warrior Zone", "P6060", "Pacific Victors Chapel", "Pedestrian Gate", "Main PX", "Provider DFAC","Maude Hall" , "Turner Gym", "Talon DFAC", "Spartan DFAC", "8th Army", "USFK Parking Lot", "CFC(Wa Mart)", "KTA", "Balboni Field", "Pyeongtaek Stn", "Pyeongtaek-Jije Stn"];
 
+require('dotenv').config();
+
 webpush.setVapidDetails(
     'mailto:getjeongwork@gmail.com',
-    'BAa6xt3nHD1Ug_Iq4wWeVyRKvF6zoIXUBzKi8UnxIaohCzKSiaBlLrjj6EdvcYJJyj3dlFTmMwI26pmQzYn-M3k',
-    'Hv7JWJDgtFrZV3VKsxEIQYC5sPn8zUf2-0y4TCvrcUU'
+    process.env.VAPID_PUBLIC,
+    process.env.VAPID_PRIVATE
 );
 
 const NEARBY_MAP = {
@@ -222,12 +224,12 @@ async function checkAndPushAlerts() {
 
 setInterval(checkAndPushAlerts, 60 * 1000);
 
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/locations', (req, res) => res.json(LOCATIONS));
 app.get('/api/specific-spots', (req, res) => {
     res.json(SPECIFIC_SPOTS);
 });
-app.use(express.json());
 app.post('/api/push-subscribe', async (req, res) => {
     if (!req.body.userId || !req.body.subscription) {
         return res.status(400).json({ error: 'invalid' });

@@ -3,7 +3,7 @@ self.addEventListener('push', (e) => {
     e.waitUntil(
         self.registration.showNotification(data.title, {
             body: data.body,
-            icon: '/icon.png',  // 아무 이미지나 넣어도 됨
+            icon: '/icon.png',
             data: { url: data.url }
         })
     );
