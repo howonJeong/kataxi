@@ -568,7 +568,7 @@
             <p class="disclaimer">본 서비스는 개인 간 카풀 매칭을 돕는 플랫폼으로, 실제 운송 책임은 당사자에게 있습니다.</p>
         </div>
     </footer>
-    
+
     <!-- 하단 네비 -->
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
@@ -750,7 +750,10 @@
 'use strict';
 
 // ── 전역 상태 ──
-const socket = io();
+const socket = io({
+    transports: ['polling'],          // 클라이언트도 polling 강제
+    upgrade: false,
+});
 let myId = '', myProvider = 'local';
 let allRoomsData = [];
 let isSearchMode = false;

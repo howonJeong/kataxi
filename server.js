@@ -12,7 +12,12 @@ const axios = require('axios');
 const PORT = process.env.PORT || 3000;
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    transports: ['polling'],          // WebSocket 대신 HTTP polling 사용
+    allowUpgrades: false,             // WebSocket 업그레이드 시도 안 함
+    pingTimeout: 60000,
+    pingInterval: 25000,
+});
 require('dotenv').config();
 
 const LOCATIONS = ["Warrior Zone","P6060","Pacific Victors Chapel","Pedestrian Gate","Main PX","Provider DFAC","Maude Hall","Turner Gym","Talon DFAC","Spartan DFAC","8th Army","USFK Parking Lot","CFC(Wa Mart)","KTA","Balboni Field","Pyeongtaek Stn","Pyeongtaek-Jije Stn"];
