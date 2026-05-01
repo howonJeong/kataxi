@@ -794,7 +794,24 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (p.get('kakao_token')) {
         history.replaceState({}, '', '/');
-        socket.emit('kakao_verify', { token: p.get('kakao_token') });
+        // REST API로 카카오 토큰 검증 (소켓 타이밍 문제 우회)
+        (async () => {
+            try {
+                const res = await fetch('/api/kakao-verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: p.get('kakao_token') })
+                });
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    handleLoginData(data);
+                } else {
+                    alert(data.error || '카카오 로그인에 실패했습니다.');
+                }
+            } catch(e) {
+                alert('카카오 로그인 처리 중 오류가 발생했습니다.');
+            }
+        })();
         return;
     }
 
@@ -825,10 +842,32 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 세션 기반 자동 로그인 (새로고침 대응)
+    // 세션 기반 자동 로그인 (REST — 소켓 준비 전 호출 문제 우회)
     const savedSession = localStorage.getItem('session_id');
     if (savedSession) {
-        socket.emit('session_login', { sessionId: savedSession });
+        (async () => {
+            try {
+                const res = await fetch('/api/session-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: savedSession })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.ok) {
+                        // 세션 유효 → 소켓에도 userId 설정해야 하므로 소켓 로그인도 병행
+                        socket.emit('session_login', { sessionId: savedSession });
+                    } else {
+                        localStorage.removeItem('session_id');
+                    }
+                } else {
+                    localStorage.removeItem('session_id');
+                }
+            } catch(e) {
+                // 네트워크 오류 시 소켓으로 폴백
+                socket.emit('session_login', { sessionId: savedSession });
+            }
+        })();
     }
 });
 
@@ -848,6 +887,29 @@ function doLogin() {
 
 function loginWithKakao() { location.href = '/auth/kakao'; }
 
+// ── REST 로그인 결과를 소켓 login_success 와 동일하게 처리 ──
+function handleLoginData(data) {
+    myId        = data.userId;
+    myProvider  = data.provider || 'local';
+    mySessionId = data.sessionId;
+    if (data.sessionId) localStorage.setItem('session_id', data.sessionId);
+    localStorage.removeItem('auto_id');
+    localStorage.removeItem('auto_pw');
+
+    document.getElementById('header-user-id').innerText = myId;
+    const badge = document.getElementById('header-kakao-badge');
+    badge.style.display = (myProvider === 'kakao' || myProvider === 'both') ? 'inline-block' : 'none';
+    document.getElementById('acct-id').innerText = myId;
+    document.getElementById('acct-provider').innerText =
+        ({ local:'아이디/비밀번호', kakao:'카카오', both:'아이디/카카오' })[myProvider] || '-';
+    if (data.email) {
+        document.getElementById('acct-email').innerText = data.email;
+        document.getElementById('acct-email').style.color = '#c8d6f0';
+    }
+    showView('view-main');
+    initMainApp();
+}
+
 socket.on('login_fail', ({ reason }) => {
     localStorage.removeItem('session_id');
     showView('view-login');
@@ -864,34 +926,13 @@ socket.on('login_fail', ({ reason }) => {
 });
 
 socket.on('login_success', (data) => {
-    myId        = data.userId;
-    myProvider  = data.provider || 'local';
-    mySessionId = data.sessionId;
-
-    // 세션ID 저장 (평문 비밀번호 대신 사용)
-    if (data.sessionId) {
-        localStorage.setItem('session_id', data.sessionId);
+    // 이미 REST로 로그인 처리된 경우 소켓 userId만 설정하고 UI 재처리 안 함
+    if (myId && myId === data.userId) {
+        mySessionId = data.sessionId || mySessionId;
+        if (data.sessionId) localStorage.setItem('session_id', data.sessionId);
+        return;
     }
-    // 구버전 키 정리
-    localStorage.removeItem('auto_id');
-    localStorage.removeItem('auto_pw');
-
-    // 헤더
-    document.getElementById('header-user-id').innerText = myId;
-    const badge = document.getElementById('header-kakao-badge');
-    badge.style.display = (myProvider === 'kakao' || myProvider === 'both') ? 'inline-block' : 'none';
-
-    // 계정 탭
-    document.getElementById('acct-id').innerText = myId;
-    document.getElementById('acct-provider').innerText =
-        ({ local:'아이디/비밀번호', kakao:'카카오', both:'아이디/카카오' })[myProvider] || '-';
-    if (data.email) {
-        document.getElementById('acct-email').innerText = data.email;
-        document.getElementById('acct-email').style.color = '#c8d6f0';
-    }
-
-    showView('view-main');
-    initMainApp();
+    handleLoginData(data);
 });
 
 socket.on('error_msg', msg => {
@@ -994,8 +1035,23 @@ async function doKakaoRegister() {
             body: JSON.stringify({ tempToken:kakaoTempToken, userId:kakaoUserId, name, phone, birthdate, email }) });
         const data = await res.json();
         if (res.ok && data.ok) {
-            msgEl.className='fmsg ok'; msgEl.innerText='✓ 저장 완료! 입장 중...';
-            socket.emit('kakao_verify', { token: kakaoTempToken });
+            msgEl.className='fmsg inf'; msgEl.innerText='✓ 저장 완료! 입장 중...';
+            // REST API로 카카오 인증 (소켓 타이밍 문제 우회)
+            try {
+                const vRes = await fetch('/api/kakao-verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: kakaoTempToken })
+                });
+                const vData = await vRes.json();
+                if (vRes.ok && vData.ok) {
+                    handleLoginData(vData);
+                } else {
+                    err(vData.error || '로그인 처리에 실패했습니다. 다시 시도해주세요.');
+                }
+            } catch(e) {
+                err('로그인 처리 중 오류가 발생했습니다.');
+            }
         } else {
             err(data.error || '저장에 실패했습니다.');
         }
@@ -1301,6 +1357,17 @@ socket.on('history_data', (history) => {
 // ════════════════════════════
 // 렌더링
 // ════════════════════════════
+// 이름 중간 마스킹: 홍길동 → 홍*동, 이순신 → 이*신, AB → A*, ABC → A*C
+function maskName(name) {
+    if (!name || name === '?') return '???';
+    const n = name.trim();
+    if (n.length === 1) return n + '*';
+    if (n.length === 2) return n[0] + '*';
+    // 3자 이상: 첫자 + * * ... + 끝자
+    const stars = '*'.repeat(n.length - 2);
+    return n[0] + stars + n[n.length - 1];
+}
+
 function renderMyRooms() {
     const mine = allRoomsData.filter(r => (r.participantList||'').split(',').includes(myId));
     renderRooms(mine, null, 'my-room-list');
@@ -1350,6 +1417,34 @@ function renderRooms(rooms, searchCriteria, targetId) {
         }
 
         // 정산 섹션
+        // 참여자 명단 (참여자에게만 표시)
+        let memberSection = '';
+        if (isJoined && room.participantList) {
+            const ids   = room.participantList.split(',');
+            const names = (room.participantNames || '').split(',');
+            const members = ids.map((uid, i) => {
+                const isCreator = uid === room.creatorId;
+                const isMe      = uid === myId;
+                const rawName   = names[i] || '?';
+                const masked    = maskName(rawName);
+                return `<span style="
+                    display:inline-flex;align-items:center;gap:4px;
+                    background:${isMe?'rgba(74,127,203,0.2)':'rgba(255,255,255,0.05)'};
+                    border:1px solid ${isMe?'rgba(74,127,203,0.4)':'rgba(255,255,255,0.08)'};
+                    border-radius:6px;padding:3px 8px;font-size:11px;color:#c8d6f0;">
+                    ${masked}
+                    ${isCreator ? '<span style="font-size:9px;background:var(--accent);color:#1a1f2e;border-radius:3px;padding:1px 4px;font-weight:800;">방장</span>' : ''}
+                    ${isMe && !isCreator ? '<span style="font-size:9px;color:#7aaae8;">(나)</span>' : ''}
+                    ${isMe && isCreator  ? '<span style="font-size:9px;color:#7aaae8;">(나)</span>' : ''}
+                </span>`;
+            }).join('');
+            memberSection = `
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05);">
+                <div style="font-size:10px;color:#5a6680;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">탑승 멤버</div>
+                <div style="display:flex;flex-wrap:wrap;gap:5px;">${members}</div>
+            </div>`;
+        }
+
         let paySection = '';
         if (room.payAmount>0 && isJoined) {
             const split   = Math.floor(parseInt(room.payAmount)/(parseInt(room.currentPax)||1));
@@ -1416,6 +1511,7 @@ function renderRooms(rooms, searchCriteria, targetId) {
                 `}
                 </div>
             </div>
+            ${memberSection}
             ${paySection}
         </div>`;
     });

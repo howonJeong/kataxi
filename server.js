@@ -146,7 +146,8 @@ async function broadcastRooms() {
         const rooms = await db.all(`
             SELECT r.*,
             (SELECT COUNT(*) FROM participants WHERE roomId=r.id) as currentPax,
-            (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId=r.id) as participantList
+            (SELECT GROUP_CONCAT(p.userId) FROM participants p WHERE p.roomId=r.id) as participantList,
+            (SELECT GROUP_CONCAT(COALESCE(u.name,'?')) FROM participants p LEFT JOIN users u ON u.userId=p.userId WHERE p.roomId=r.id) as participantNames
             FROM rooms r WHERE (date>?) OR (date=? AND time>=?)
             ORDER BY date ASC, time ASC`, [ld, ld, lt]);
         io.emit('update_rooms', { rooms: rooms || [], searchCriteria: { origin:'', dest:'' } });
@@ -389,6 +390,36 @@ app.post('/api/reset-password', async (req, res) => {
     res.json({ ok: true });
 });
 
+// 카카오 회원가입 후 세션 발급 (REST API 버전 — 소켓 타이밍 문제 우회)
+app.post('/api/kakao-verify', async (req, res) => {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: '토큰이 없습니다.' });
+    try {
+        const row = await db.get(
+            `SELECT * FROM password_resets WHERE token=? AND used=0 AND expiresAt>?`,
+            [token, Date.now()]
+        );
+        if (!row) return res.status(400).json({ error: '세션이 만료되었습니다. 카카오 로그인을 다시 시도해주세요.' });
+        await db.run(`UPDATE password_resets SET used=1 WHERE token=?`, [token]);
+        const user = await db.get(`SELECT * FROM users WHERE userId=?`, [row.userId]);
+        if (!user) return res.status(404).json({ error: '유저를 찾을 수 없습니다.' });
+        // 세션 발급
+        const sessionId = await createSession(user.userId);
+        res.json({
+            ok: true,
+            userId:      user.userId,
+            provider:    user.authProvider || 'kakao',
+            email:       user.email   || null,
+            isOnboarded: user.isOnboarded || 0,
+            name:        user.name    || null,
+            sessionId,
+        });
+    } catch(e) {
+        console.error('[kakao-verify 에러]', e);
+        res.status(500).json({ error: '서버 오류가 발생했습니다.' });
+    }
+});
+
 // 관리자: 더미 계정 정리
 app.post('/api/admin/purge-ghosts', async (req, res) => {
     const key = req.headers['x-admin-key'];
@@ -521,12 +552,14 @@ io.on('connection', (socket) => {
             if (!date) {
                 const today = new Date(Date.now() + 9*3600000).toISOString().split('T')[0];
                 q = `SELECT r.*, (SELECT COUNT(*) FROM participants WHERE roomId=r.id) as currentPax,
-                     (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId=r.id) as participantList
+                     (SELECT GROUP_CONCAT(p.userId) FROM participants p WHERE p.roomId=r.id) as participantList,
+                     (SELECT GROUP_CONCAT(COALESCE(u.name,'?')) FROM participants p LEFT JOIN users u ON u.userId=p.userId WHERE p.roomId=r.id) as participantNames
                      FROM rooms r WHERE date>=?`;
                 p = [today];
             } else {
                 q = `SELECT r.*, (SELECT COUNT(*) FROM participants WHERE roomId=r.id) as currentPax,
-                     (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId=r.id) as participantList
+                     (SELECT GROUP_CONCAT(p.userId) FROM participants p WHERE p.roomId=r.id) as participantList,
+                     (SELECT GROUP_CONCAT(COALESCE(u.name,'?')) FROM participants p LEFT JOIN users u ON u.userId=p.userId WHERE p.roomId=r.id) as participantNames
                      FROM rooms r WHERE date=?`;
                 p = [date];
             }
