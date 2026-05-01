@@ -558,10 +558,9 @@
             <div style="font-size:10px;color:#4e5c75;line-height:2;margin:8px 0;">
                 <span>상호: 정호원</span> · <span>대표자: 정호원</span><br>
                 <span>사업자등록번호: 818-09-02663</span><br>
+                <span>이메일: <a href="mailto:jeonghowon9@gmail.com" style="color:#5a6680;">jeonghowon9@gmail.com</a></span>
             </div>
             <div class="contact-info">
-                <span>CONTACT: <a href="mailto:getjeongwork@gmail.com">getjeongwork@gmail.com</a></span>
-                <span style="margin:0 6px;">|</span>
                 <a href="#" onclick="openPrivacy();return false;" style="color:#5a6680;text-decoration:underline;font-size:11px;">개인정보처리방침</a>
             </div>
             <p class="disclaimer">본 서비스는 개인 간 카풀 매칭을 돕는 플랫폼으로, 실제 운송 책임은 당사자에게 있습니다.</p>
@@ -749,10 +748,7 @@
 'use strict';
 
 // ── 전역 상태 ──
-const socket = io({
-    transports: ['polling'],          // 클라이언트도 polling 강제
-    upgrade: false,
-});
+const socket = io();
 let myId = '', myProvider = 'local';
 let allRoomsData = [];
 let isSearchMode = false;
@@ -829,10 +825,11 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 자동 로그인
-    const sid = localStorage.getItem('auto_id');
-    const spw = localStorage.getItem('auto_pw');
-    if (sid && spw) socket.emit('login', { userId: sid, userPw: spw });
+    // 세션 기반 자동 로그인 (새로고침 대응)
+    const savedSession = localStorage.getItem('session_id');
+    if (savedSession) {
+        socket.emit('session_login', { sessionId: savedSession });
+    }
 });
 
 // ════════════════════════════
@@ -852,31 +849,32 @@ function doLogin() {
 function loginWithKakao() { location.href = '/auth/kakao'; }
 
 socket.on('login_fail', ({ reason }) => {
-    // 자동로그인 실패 시 저장 정보 제거
-    localStorage.removeItem('auto_id');
-    localStorage.removeItem('auto_pw');
+    localStorage.removeItem('session_id');
     showView('view-login');
     const msgEl = document.getElementById('login-msg');
     if (!msgEl) return;
     msgEl.className = 'fmsg err';
     if (reason === 'no_user') {
         msgEl.innerHTML = '등록되지 않은 아이디입니다. <button class="link-btn" style="font-size:12px;" onclick="showView(\'view-register\')">회원가입 →</button>';
+    } else if (reason === 'session_expired') {
+        // 세션 만료 — 조용히 로그인 화면만 보여줌 (에러 메시지 없음)
     } else {
         msgEl.innerText = '로그인에 실패했습니다.';
     }
 });
 
 socket.on('login_success', (data) => {
-    myId       = data.userId;
-    myProvider = data.provider || 'local';
+    myId        = data.userId;
+    myProvider  = data.provider || 'local';
+    mySessionId = data.sessionId;
 
-    // 수동 로그인 시 auto 저장 / 자동로그인은 이미 storage에 있음
-    const pwEl = document.getElementById('login-pw');
-    const typedPw = pwEl ? pwEl.value : '';
-    if (typedPw) {
-        localStorage.setItem('auto_id', myId);
-        localStorage.setItem('auto_pw', typedPw);
+    // 세션ID 저장 (평문 비밀번호 대신 사용)
+    if (data.sessionId) {
+        localStorage.setItem('session_id', data.sessionId);
     }
+    // 구버전 키 정리
+    localStorage.removeItem('auto_id');
+    localStorage.removeItem('auto_pw');
 
     // 헤더
     document.getElementById('header-user-id').innerText = myId;
@@ -896,11 +894,9 @@ socket.on('login_success', (data) => {
     initMainApp();
 });
 
-// error_msg: 로그인 전 에러는 storage 클리어 후 로그인 화면 표시
 socket.on('error_msg', msg => {
     if (!myId) {
-        localStorage.removeItem('auto_id');
-        localStorage.removeItem('auto_pw');
+        localStorage.removeItem('session_id');
         showView('view-login');
         const msgEl = document.getElementById('login-msg');
         if (msgEl) { msgEl.className = 'fmsg err'; msgEl.innerText = msg; }
@@ -910,8 +906,8 @@ socket.on('error_msg', msg => {
 });
 
 function logout() {
-    if (!confirm('로그아웃 하시겠습니까? 자동 로그인도 해제됩니다.')) return;
-    localStorage.clear();
+    if (!confirm('로그아웃 하시겠습니까?')) return;
+    localStorage.removeItem('session_id');
     location.reload();
 }
 
@@ -1180,9 +1176,11 @@ function searchPool() {
     const origin = document.getElementById('search-origin').value;
     const dest   = document.getElementById('search-dest').value;
     const date   = document.getElementById('search-date').value;
+    // 출발·도착·날짜 중 하나라도 선택했으면 검색모드
+    // date='' 은 "날짜 전체" 의미 — 서버에서 오늘 이후 전체 조회
     isSearchMode = !!(origin || dest || date);
     if (isSearchMode) socket.emit('search_rooms', { origin, dest, date });
-    else { socket.emit('request_init_rooms'); }
+    else socket.emit('request_init_rooms');
 }
 
 function resetSearch() {
@@ -1427,13 +1425,11 @@ function renderRooms(rooms, searchCriteria, targetId) {
 // 자동 갱신 (1분)
 setInterval(() => { if (myId && !isSearchMode) socket.emit('request_init_rooms'); }, 60000);
 
-// 소켓 재연결 시 자동 재인증 (서버 재시작 등)
-socket.on('reconnect', () => {
-    if (myId) {
-        const sid = localStorage.getItem('auto_id');
-        const spw = localStorage.getItem('auto_pw');
-        if (sid && spw) socket.emit('login', { userId: sid, userPw: spw });
-        else { localStorage.clear(); location.reload(); }
+// 소켓 재연결 시 자동 재인증 (서버 재시작 등, socket.io v4)
+socket.on('connect', () => {
+    if (myId && mySessionId) {
+        // 이미 로그인된 상태에서 재연결 → 세션으로 재인증
+        socket.emit('session_login', { sessionId: mySessionId });
     }
 });
 

@@ -1,24 +1,27 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
+const crypto = require('crypto');
+require('dotenv').config(); // ← dotenv 최상단으로 이동
+
 const { Server } = require('socket.io');
 const bcrypt = require('bcrypt');
-const path = require('path');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
-const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 const server = http.createServer(app);
+
+// polling 설정 (NIPR 망 대응)
 const io = new Server(server, {
-    transports: ['polling'],          // WebSocket 대신 HTTP polling 사용
-    allowUpgrades: false,             // WebSocket 업그레이드 시도 안 함
+    transports: ['polling'],
+    allowUpgrades: false,
     pingTimeout: 60000,
     pingInterval: 25000,
 });
-require('dotenv').config();
 
 const LOCATIONS = ["Warrior Zone","P6060","Pacific Victors Chapel","Pedestrian Gate","Main PX","Provider DFAC","Maude Hall","Turner Gym","Talon DFAC","Spartan DFAC","8th Army","USFK Parking Lot","CFC(Wa Mart)","KTA","Balboni Field","Pyeongtaek Stn","Pyeongtaek-Jije Stn"];
 
@@ -84,6 +87,12 @@ let db;
             score INTEGER DEFAULT 100, driveCount INTEGER DEFAULT 0,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS sessions (
+            sessionId TEXT PRIMARY KEY,
+            userId    TEXT NOT NULL,
+            createdAt INTEGER NOT NULL,
+            expiresAt INTEGER NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS password_resets (
             token TEXT PRIMARY KEY, userId TEXT NOT NULL,
             expiresAt INTEGER NOT NULL, used INTEGER DEFAULT 0
@@ -113,6 +122,13 @@ let db;
     await add('authProvider',"TEXT DEFAULT 'local'"); await add('name','TEXT');
     await add('phone','TEXT'); await add('birthdate','TEXT');
     await add('isOnboarded','INTEGER DEFAULT 0');
+
+    // 만료된 세션 주기적 정리 (1시간마다)
+    setInterval(async () => {
+        await db.run(`DELETE FROM sessions WHERE expiresAt < ?`, [Date.now()]);
+        await db.run(`DELETE FROM password_resets WHERE expiresAt < ? OR used = 1`, [Date.now()]);
+    }, 3600000);
+
     console.log("DB Ready!");
 })();
 
@@ -122,17 +138,41 @@ function normalizePhone(raw = '') {
 }
 
 async function broadcastRooms() {
-    const kst   = new Date(Date.now() + 9 * 3600000);
-    const limit = new Date(kst.getTime() - 3 * 3600000);
-    const ld    = limit.toISOString().split('T')[0];
-    const lt    = limit.toISOString().split('T')[1].substring(0, 5);
-    const rooms = await db.all(`
-        SELECT r.*,
-        (SELECT COUNT(*) FROM participants WHERE roomId=r.id) as currentPax,
-        (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId=r.id) as participantList
-        FROM rooms r WHERE (date>?) OR (date=? AND time>=?)
-        ORDER BY date ASC, time ASC`, [ld, ld, lt]);
-    io.emit('update_rooms', { rooms: rooms || [], searchCriteria: { origin:'', dest:'' } });
+    try {
+        const kst   = new Date(Date.now() + 9 * 3600000);
+        const limit = new Date(kst.getTime() - 3 * 3600000);
+        const ld    = limit.toISOString().split('T')[0];
+        const lt    = limit.toISOString().split('T')[1].substring(0, 5);
+        const rooms = await db.all(`
+            SELECT r.*,
+            (SELECT COUNT(*) FROM participants WHERE roomId=r.id) as currentPax,
+            (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId=r.id) as participantList
+            FROM rooms r WHERE (date>?) OR (date=? AND time>=?)
+            ORDER BY date ASC, time ASC`, [ld, ld, lt]);
+        io.emit('update_rooms', { rooms: rooms || [], searchCriteria: { origin:'', dest:'' } });
+    } catch(e) { console.error('[broadcastRooms]', e); }
+}
+
+// ── 세션 유틸 ──
+const SESSION_TTL = 30 * 24 * 3600 * 1000; // 30일
+
+async function createSession(userId) {
+    const sessionId = crypto.randomBytes(32).toString('hex');
+    const now = Date.now();
+    await db.run(
+        `INSERT INTO sessions (sessionId, userId, createdAt, expiresAt) VALUES (?,?,?,?)`,
+        [sessionId, userId, now, now + SESSION_TTL]
+    );
+    return sessionId;
+}
+
+async function verifySession(sessionId) {
+    if (!sessionId) return null;
+    const row = await db.get(
+        `SELECT * FROM sessions WHERE sessionId=? AND expiresAt>?`,
+        [sessionId, Date.now()]
+    );
+    return row ? row.userId : null;
 }
 
 app.use(express.json());
@@ -183,24 +223,37 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// 카카오 회원가입 완료 (추가정보 저장)
+// 세션으로 자동 로그인 복원
+app.post('/api/session-login', async (req, res) => {
+    const { sessionId } = req.body;
+    const userId = await verifySession(sessionId);
+    if (!userId) return res.status(401).json({ error: 'invalid' });
+    const user = await db.get('SELECT * FROM users WHERE userId=?', [userId]);
+    if (!user) return res.status(401).json({ error: 'invalid' });
+    res.json({
+        ok: true,
+        userId: user.userId,
+        provider: user.authProvider || 'local',
+        email: user.email || null,
+        isOnboarded: user.isOnboarded || 0,
+        name: user.name || null,
+    });
+});
+
+// 카카오 회원가입 완료
 app.post('/api/kakao-register', async (req, res) => {
     const { tempToken, userId, name, phone, birthdate, email } = req.body;
     if (!tempToken || !userId || !name || !phone)
         return res.status(400).json({ error: '필수 항목을 모두 입력하세요.' });
-
-    // 토큰 검증 (used=0 이어야 함 — 소켓 인증 전)
     const row = await db.get(
         `SELECT * FROM password_resets WHERE token=? AND used=0 AND expiresAt>?`,
         [tempToken, Date.now()]
     );
     if (!row || row.userId !== userId)
         return res.status(400).json({ error: '세션이 만료되었습니다. 카카오 로그인을 다시 시도해주세요.' });
-
     const np = normalizePhone(phone);
     if (np.length < 10 || np.length > 11)
         return res.status(400).json({ error: '올바른 휴대폰 번호를 입력하세요.' });
-
     try {
         if (email) {
             const dup = await db.get('SELECT 1 FROM users WHERE email=? AND userId!=?', [email, userId]);
@@ -211,7 +264,6 @@ app.post('/api/kakao-register', async (req, res) => {
             `UPDATE users SET name=?, phone=?, birthdate=?, isOnboarded=1 WHERE userId=?`,
             [name.trim(), np, birthdate||null, userId]
         );
-        // 토큰은 소켓 kakao_verify 에서 소진하므로 여기서 used 변경 안 함
         res.json({ ok: true });
     } catch (e) {
         console.error(e);
@@ -232,32 +284,25 @@ app.get('/auth/kakao/callback', async (req, res) => {
     const { code } = req.query;
     if (!code) return res.redirect('/?kakao_error=no_code');
     try {
-        // 1. 액세스 토큰
         const { data: tokenData } = await axios.post(
             'https://kauth.kakao.com/oauth/token',
             new URLSearchParams({ grant_type:'authorization_code', client_id:process.env.KAKAO_CLIENT_ID, redirect_uri:process.env.KAKAO_REDIRECT_URI, code }),
             { headers: { 'Content-Type':'application/x-www-form-urlencoded' } }
         );
-        // 2. 유저 정보
-        //    카카오 디벨로퍼 > 동의항목에서 활성화 필요:
-        //    nickname(필수), email(선택동의), name(선택동의), phone_number(선택동의),
-        //    birthyear(선택동의), birthday(선택동의)
         const { data: ku } = await axios.get('https://kapi.kakao.com/v2/user/me', {
             headers: { Authorization: `Bearer ${tokenData.access_token}` }
         });
         const kakaoId    = String(ku.id);
         const acct       = ku.kakao_account || {};
         const kakaoNick  = acct.profile?.nickname || `카투사${kakaoId.slice(-4)}`;
-        const kakaoEmail = acct.email       || null;
-        const kakaoName  = acct.name        || null;   // 실명 동의항목
-        const kakaoPhone = acct.phone_number|| null;   // +82 10-xxxx-xxxx 형태
+        const kakaoEmail = acct.email        || null;
+        const kakaoName  = acct.name         || null;
+        const kakaoPhone = acct.phone_number || null;
         const kakaoBirth = (acct.birthyear && acct.birthday)
             ? `${acct.birthyear}-${acct.birthday.slice(0,2)}-${acct.birthday.slice(2,4)}` : null;
 
-        // 3. DB 처리
         let user = await db.get(`SELECT * FROM users WHERE kakaoId=?`, [kakaoId]);
         if (!user) {
-            // 이메일로 기존 로컬 계정 연동
             if (kakaoEmail) {
                 const byEmail = await db.get(`SELECT * FROM users WHERE email=?`, [kakaoEmail]);
                 if (byEmail) {
@@ -265,22 +310,17 @@ app.get('/auth/kakao/callback', async (req, res) => {
                     user = await db.get(`SELECT * FROM users WHERE userId=?`, [byEmail.userId]);
                 }
             }
-            // 완전 신규
             if (!user) {
                 let uid = kakaoNick.replace(/[^a-zA-Z0-9가-힣_-]/g,'_').substring(0,16) || `user${kakaoId.slice(-4)}`;
                 if (await db.get(`SELECT 1 FROM users WHERE userId=?`, [uid])) uid = `${uid}_${kakaoId.slice(-4)}`;
                 await db.run(
                     `INSERT INTO users (userId,email,kakaoId,authProvider,name,phone,birthdate,isOnboarded)
                      VALUES (?,?,?,'kakao',?,?,?,0)`,
-                    [uid, kakaoEmail, kakaoId,
-                     kakaoName || null,
-                     kakaoPhone ? normalizePhone(kakaoPhone) : null,
-                     kakaoBirth || null]
+                    [uid, kakaoEmail, kakaoId, kakaoName||null, kakaoPhone?normalizePhone(kakaoPhone):null, kakaoBirth||null]
                 );
                 user = await db.get(`SELECT * FROM users WHERE userId=?`, [uid]);
             }
         } else {
-            // 기존 유저: 카카오에서 새로 동의한 정보가 있으면 업데이트
             const upd = []; const prm = [];
             if (kakaoName  && !user.name)     { upd.push('name=?');      prm.push(kakaoName); }
             if (kakaoPhone && !user.phone)    { upd.push('phone=?');     prm.push(normalizePhone(kakaoPhone)); }
@@ -292,26 +332,19 @@ app.get('/auth/kakao/callback', async (req, res) => {
             }
         }
 
-        // 4. 임시토큰 발급
         const tempToken = crypto.randomBytes(16).toString('hex');
         await db.run(
             `INSERT OR REPLACE INTO password_resets (token,userId,expiresAt,used) VALUES (?,?,?,0)`,
-            [tempToken, user.userId, Date.now() + 10 * 60 * 1000]  // 10분
+            [tempToken, user.userId, Date.now() + 10 * 60 * 1000]
         );
 
         if (user.isOnboarded) {
-            // 기존 유저 → 바로 로그인
             res.redirect(`/?kakao_token=${tempToken}`);
         } else {
-            // 신규 유저 → 추가정보 입력 화면
             const qs = new URLSearchParams({
-                kakao_register: '1',
-                tempToken,
-                userId:  user.userId,
-                name:    kakaoName  || '',
-                phone:   kakaoPhone ? normalizePhone(kakaoPhone) : '',
-                birth:   kakaoBirth || '',
-                email:   kakaoEmail || '',
+                kakao_register: '1', tempToken, userId: user.userId,
+                name: kakaoName||'', phone: kakaoPhone?normalizePhone(kakaoPhone):'',
+                birth: kakaoBirth||'', email: kakaoEmail||'',
             });
             res.redirect(`/?${qs.toString()}`);
         }
@@ -331,13 +364,14 @@ app.post('/api/request-reset', async (req, res) => {
     await db.run(`INSERT OR REPLACE INTO password_resets (token,userId,expiresAt,used) VALUES (?,?,?,0)`,
         [token, user.userId, Date.now() + 30 * 60 * 1000]);
     const url = `${process.env.APP_URL || 'http://localhost:' + PORT}/reset-password?token=${token}`;
-    await mailer.sendMail({
-        from: `"KATCHI-TAPSIDA" <${process.env.MAIL_USER}>`, to: email,
-        subject: '[KATCHI-TAPSIDA] 비밀번호 재설정 안내',
-        html: `<h2>비밀번호 재설정</h2><p>아래 링크를 클릭해 30분 이내에 비밀번호를 변경하세요.</p>
-               <a href="${url}" style="background:#4a7fcb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">비밀번호 재설정</a>
-               <p style="color:#999;font-size:12px;margin-top:20px;">요청하지 않았다면 무시하세요.</p>`
-    });
+    try {
+        await mailer.sendMail({
+            from: `"KATCHI-TAPSIDA" <${process.env.MAIL_USER}>`, to: email,
+            subject: '[KATCHI-TAPSIDA] 비밀번호 재설정 안내',
+            html: `<h2>비밀번호 재설정</h2><p>아래 링크를 클릭해 30분 이내에 비밀번호를 변경하세요.</p>
+                   <a href="${url}" style="background:#4a7fcb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">비밀번호 재설정</a>`
+        });
+    } catch(e) { console.error('[메일 발송 에러]', e.message); }
     res.json({ ok: true });
 });
 
@@ -355,10 +389,46 @@ app.post('/api/reset-password', async (req, res) => {
     res.json({ ok: true });
 });
 
+// 관리자: 더미 계정 정리
+app.post('/api/admin/purge-ghosts', async (req, res) => {
+    const key = req.headers['x-admin-key'];
+    if (!key || key !== process.env.ADMIN_KEY) return res.status(403).json({ error: 'forbidden' });
+    try {
+        const r = await db.run(`DELETE FROM users WHERE name IS NULL AND kakaoId IS NULL`);
+        res.json({ ok: true, deleted: r.changes });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Socket.IO ──
 io.on('connection', (socket) => {
 
-    // 로그인 (기존 계정만, 없으면 login_fail)
+    // 공통 로그인 성공 처리
+    async function emitLoginSuccess(socket, user) {
+        socket.userId = user.userId;
+        // 세션 발급
+        const sessionId = await createSession(user.userId);
+        socket.emit('login_success', {
+            userId:      user.userId,
+            provider:    user.authProvider || 'local',
+            email:       user.email   || null,
+            isOnboarded: user.isOnboarded || 0,
+            name:        user.name    || null,
+            sessionId,   // 클라이언트가 저장해서 재로그인에 사용
+        });
+    }
+
+    // 세션으로 자동 로그인 (새로고침 대응)
+    socket.on('session_login', async ({ sessionId }) => {
+        try {
+            const userId = await verifySession(sessionId);
+            if (!userId) return socket.emit('login_fail', { reason: 'session_expired' });
+            const user = await db.get('SELECT * FROM users WHERE userId=?', [userId]);
+            if (!user) return socket.emit('login_fail', { reason: 'no_user' });
+            await emitLoginSuccess(socket, user);
+        } catch(e) { console.error(e); socket.emit('login_fail', { reason: 'error' }); }
+    });
+
+    // 일반 로그인
     socket.on('login', async ({ userId, userPw }) => {
         if (!userId || !userPw) return socket.emit('error_msg', '아이디와 비밀번호를 입력해주세요.');
         try {
@@ -366,12 +436,7 @@ io.on('connection', (socket) => {
             if (!user) return socket.emit('login_fail', { reason: 'no_user' });
             if (!user.password) return socket.emit('error_msg', '카카오로 가입된 계정입니다. 카카오 로그인을 이용해주세요.');
             if (!await bcrypt.compare(userPw, user.password)) return socket.emit('error_msg', '비밀번호가 틀렸습니다.');
-            socket.userId = userId;
-            socket.emit('login_success', {
-                userId, provider: user.authProvider||'local',
-                email: user.email||null, isOnboarded: user.isOnboarded||0,
-                name: user.name||null, phone: user.phone||null,
-            });
+            await emitLoginSuccess(socket, user);
         } catch (e) { console.error(e); socket.emit('error_msg', '서버 오류가 발생했습니다.'); }
     });
 
@@ -382,13 +447,8 @@ io.on('connection', (socket) => {
             const row = await db.get(`SELECT * FROM password_resets WHERE token=? AND used=0 AND expiresAt>?`, [token, Date.now()]);
             if (!row) return socket.emit('error_msg', '카카오 로그인 세션이 만료되었습니다. 다시 시도해주세요.');
             await db.run(`UPDATE password_resets SET used=1 WHERE token=?`, [token]);
-            socket.userId = row.userId;
             const user = await db.get(`SELECT * FROM users WHERE userId=?`, [row.userId]);
-            socket.emit('login_success', {
-                userId: row.userId, provider: user?.authProvider||'kakao',
-                email: user?.email||null, isOnboarded: user?.isOnboarded||0,
-                name: user?.name||null, phone: user?.phone||null,
-            });
+            await emitLoginSuccess(socket, user);
         } catch (e) { console.error(e); socket.emit('error_msg', '카카오 로그인 처리 중 오류가 발생했습니다.'); }
     });
 
@@ -423,6 +483,21 @@ io.on('connection', (socket) => {
 
     socket.on('create_room', async ({ date, origin, dest, time, specificLocation, maxPax }) => {
         if (!socket.userId) return;
+        // 유효성 검사
+        if (!origin || !dest || !date || !time) return socket.emit('error_msg', '모든 항목을 입력해주세요.');
+        if (origin === dest) return socket.emit('error_msg', '출발지와 목적지가 같습니다.');
+        const today = new Date(Date.now() + 9*3600000).toISOString().split('T')[0];
+        if (date < today) return socket.emit('error_msg', '오늘 이후 날짜만 선택할 수 있습니다.');
+
+        // 같은 날짜·시간대 중복 방 생성 방지 (동일 날짜에 이미 방 있으면 차단)
+        const existing = await db.get(
+            `SELECT r.id FROM rooms r
+             JOIN participants p ON p.roomId = r.id
+             WHERE p.userId=? AND r.date=?`,
+            [socket.userId, date]
+        );
+        if (existing) return socket.emit('error_msg', '같은 날짜에 이미 참여 중인 카풀이 있습니다.');
+
         try {
             const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
             const ani = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
@@ -433,21 +508,32 @@ io.on('connection', (socket) => {
             await db.run(`INSERT INTO participants (roomId,userId) VALUES (?,?)`, [r.lastID, socket.userId]);
             await db.run(`UPDATE users SET driveCount=driveCount+1 WHERE userId=?`, [socket.userId]);
             broadcastRooms();
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error(e); socket.emit('error_msg', '방 생성 중 오류가 발생했습니다.'); }
     });
 
     socket.on('search_rooms', async ({ origin, dest, date }) => {
-        if (!date) date = new Date(Date.now() + 9*3600000).toISOString().split('T')[0];
-        const oL = origin ? [origin, ...(NEARBY_MAP[origin]||[])] : [];
-        const dL = dest   ? [dest,   ...(NEARBY_MAP[dest]  ||[])] : [];
         try {
-            let q = `SELECT r.*, (SELECT COUNT(*) FROM participants WHERE roomId=r.id) as currentPax,
+            const oL = origin ? [origin, ...(NEARBY_MAP[origin]||[])] : [];
+            const dL = dest   ? [dest,   ...(NEARBY_MAP[dest]  ||[])] : [];
+
+            // date가 없으면 오늘부터 7일치 전체 조회
+            let q, p;
+            if (!date) {
+                const today = new Date(Date.now() + 9*3600000).toISOString().split('T')[0];
+                q = `SELECT r.*, (SELECT COUNT(*) FROM participants WHERE roomId=r.id) as currentPax,
+                     (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId=r.id) as participantList
+                     FROM rooms r WHERE date>=?`;
+                p = [today];
+            } else {
+                q = `SELECT r.*, (SELECT COUNT(*) FROM participants WHERE roomId=r.id) as currentPax,
                      (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId=r.id) as participantList
                      FROM rooms r WHERE date=?`;
-            const p = [date];
+                p = [date];
+            }
+
             if (oL.length) { q += ` AND origin IN (${oL.map(()=>'?').join(',')})`; p.push(...oL); }
             if (dL.length) { q += ` AND dest IN (${dL.map(()=>'?').join(',')})`; p.push(...dL); }
-            q += ' ORDER BY time ASC';
+            q += ' ORDER BY date ASC, time ASC';
             socket.emit('search_result', { rooms: await db.all(q, p)||[], searchCriteria:{origin,dest,date} });
         } catch (e) { console.error(e); }
     });
@@ -456,14 +542,30 @@ io.on('connection', (socket) => {
         if (!socket.userId) return;
         try {
             const room = await db.get(`SELECT * FROM rooms WHERE id=?`, [roomId]);
-            if (!room) return;
+            if (!room) return socket.emit('error_msg', '존재하지 않는 방입니다.');
+
+            // 정원 확인
             const cnt = await db.get(`SELECT COUNT(*) as c FROM participants WHERE roomId=?`, [roomId]);
             if (cnt.c >= room.maxPax) return socket.emit('error_msg', '정원이 가득 찼습니다.');
+
+            // 같은 날짜 다른 방 이미 참여 중인지 확인
+            const sameDay = await db.get(
+                `SELECT r.id, r.origin, r.dest, r.time FROM rooms r
+                 JOIN participants p ON p.roomId = r.id
+                 WHERE p.userId=? AND r.date=? AND r.id!=?`,
+                [socket.userId, room.date, roomId]
+            );
+            if (sameDay) {
+                return socket.emit('error_msg',
+                    `같은 날짜(${room.date})에 이미 다른 카풀에 참여 중입니다.\n(${sameDay.origin}→${sameDay.dest} ${sameDay.time})`
+                );
+            }
+
             await db.run(`INSERT INTO participants (roomId,userId) VALUES (?,?)`, [roomId, socket.userId]);
             broadcastRooms();
         } catch (e) {
             if (e.message?.includes('UNIQUE')) socket.emit('error_msg', '이미 참여 중인 카풀입니다.');
-            else socket.emit('error_msg', '참여 처리 중 오류가 발생했습니다.');
+            else { console.error(e); socket.emit('error_msg', '참여 처리 중 오류가 발생했습니다.'); }
         }
     });
 
@@ -489,7 +591,8 @@ io.on('connection', (socket) => {
             if (!await db.get(`SELECT 1 FROM participants WHERE roomId=? AND userId=?`, [roomId, socket.userId]))
                 return socket.emit('error_msg', '참여자만 정산을 등록할 수 있습니다.');
             const safe = parseInt(amount);
-            if (isNaN(safe) || safe <= 0) return socket.emit('error_msg', '올바른 금액을 입력해주세요.');
+            if (isNaN(safe) || safe <= 0 || safe > 10000000) return socket.emit('error_msg', '올바른 금액을 입력해주세요.');
+            if (!account || !bank) return socket.emit('error_msg', '계좌 정보를 입력해주세요.');
             const r = await db.run(`UPDATE rooms SET payAmount=?,payBank=?,payAccount=?,payerId=? WHERE id=?`,
                 [safe, bank, account, socket.userId, roomId]);
             if (r.changes > 0) broadcastRooms();
@@ -503,8 +606,9 @@ io.on('connection', (socket) => {
             const room = await db.get(`
                 SELECT r.*, (SELECT GROUP_CONCAT(userId) FROM participants WHERE roomId=r.id) as participantList
                 FROM rooms r WHERE r.id=?`, [roomId]);
-            if (!room?.participantList) return;
+            if (!room?.participantList) return socket.emit('error_msg', '방 정보를 찾을 수 없습니다.');
             if (room.payerId !== socket.userId) return socket.emit('error_msg', '정산 등록자만 완료 처리할 수 있습니다.');
+            if (!room.payAmount) return socket.emit('error_msg', '정산 금액이 등록되지 않았습니다.');
             const ps = room.participantList.split(',');
             const split = Math.floor(room.payAmount / ps.length);
             for (const uid of ps) {
@@ -517,7 +621,7 @@ io.on('connection', (socket) => {
             await db.run('DELETE FROM participants WHERE roomId=?', [roomId]);
             await broadcastRooms();
             io.emit('history_updated');
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error(e); socket.emit('error_msg', '정산 완료 처리 중 오류가 발생했습니다.'); }
     });
 
     socket.on('request_history', async () => {
