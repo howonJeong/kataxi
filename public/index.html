@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1a1f2c">
+    <meta name="theme-color" id="theme-color-meta" content="#13161f">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" href="https://fav.farm/🚕">
@@ -14,355 +14,171 @@
     <link rel="stylesheet" href="/style.css">
 
     <style>
-    /* ════════════════════════════════════════
-       AUTH 화면 전용 스타일
-    ════════════════════════════════════════ */
+    /* ═══════════════════════════════
+       AUTH 화면 전용 (다크/라이트 대응)
+    ═══════════════════════════════ */
     .view { display: none !important; }
     .view.active { display: block !important; }
 
     #view-main {
-        position: fixed !important;
-        inset: 0 !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        background: var(--bg-main) !important;
-        z-index: 10 !important;
+        position: fixed !important; inset: 0 !important;
+        overflow-y: auto !important; -webkit-overflow-scrolling: touch !important;
+        background: var(--bg-main) !important; z-index: 10 !important;
     }
-    #view-main .container {
-        padding-left: 18px !important;
-        padding-right: 18px !important;
-        padding-bottom: 120px !important;
-    }
+    #view-main .container { padding-left:16px!important; padding-right:16px!important; padding-bottom:130px!important; }
     #view-main.active { display: block !important; }
-
-    #view-login .auth-screen,
-    #view-register .auth-screen,
-    #view-kakao-register .auth-screen {
-        z-index: 3000 !important;
-    }
-
-    #view-main:not(.active) .kitsch-header { display: none !important; }
-    #view-main:not(.active) .bottom-nav   { display: none !important; }
+    #view-login .auth-screen, #view-register .auth-screen, #view-kakao-register .auth-screen { z-index:3000!important; }
+    #view-main:not(.active) .kitsch-header,
+    #view-main:not(.active) .bottom-nav { display:none!important; }
 
     .auth-screen {
-        position: fixed;
-        inset: 0;
-        background: #1a1f2e;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        z-index: 3000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 48px 24px;
-        padding-bottom: calc(48px + env(safe-area-inset-bottom));
+        position:fixed; inset:0; background:var(--bg-main); overflow-y:auto;
+        -webkit-overflow-scrolling:touch; z-index:3000;
+        display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+        padding:48px 20px calc(48px + env(safe-area-inset-bottom));
+        transition:background 0.25s;
     }
-
     .auth-card {
-        width: 100%;
-        max-width: 390px;
-        background: #1e2434;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 16px;
-        padding: 32px 28px 28px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        width:100%; max-width:390px; background:var(--card-bg); border:1px solid var(--card-border);
+        border-radius:var(--radius-lg); padding:28px 24px 24px; box-shadow:var(--shadow);
+        transition:background 0.25s, border-color 0.25s;
     }
-
-    .auth-logo-wrap { text-align: center; margin-bottom: 20px; }
-    .auth-logo-wrap .kitsch-logo { font-size: 1.6rem; margin-bottom: 6px; }
-    .auth-tagline { font-size: 12px; color: #5a6680; line-height: 1.5; }
+    .auth-logo-wrap { text-align:center; margin-bottom:20px; }
+    .auth-tagline { font-size:12px; color:var(--text-muted); line-height:1.6; }
 
     .auth-card label {
-        display: block;
-        font-size: 10px;
-        font-weight: 800;
-        color: #4e5c75;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 6px;
-        margin-top: 18px;
+        display:block; font-size:10px; font-weight:700; color:var(--text-muted);
+        text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; margin-top:16px;
     }
-    .auth-card label:first-of-type { margin-top: 0; }
+    .auth-card label:first-of-type { margin-top:0; }
 
     .auth-card input {
-        width: 100%;
-        height: 48px !important;
-        padding: 0 14px !important;
-        margin-bottom: 0 !important;
-        font-size: 16px !important;
-        background: #131826 !important;
-        border: 1px solid rgba(255,255,255,0.07) !important;
-        border-radius: 8px !important;
-        color: #e8edf8 !important;
-        outline: none;
-        transition: border-color 0.2s;
-        -webkit-appearance: none;
-        box-sizing: border-box;
+        width:100%; height:46px!important; padding:0 13px!important; margin-bottom:0!important;
+        font-size:16px!important; background:var(--bg-sub)!important; border:1px solid var(--border-med)!important;
+        border-radius:var(--radius-sm)!important; color:var(--text-main)!important; outline:none;
+        transition:border-color 0.2s, box-shadow 0.2s, background 0.25s;
+        -webkit-appearance:none; box-sizing:border-box; font-family:inherit;
     }
-    .auth-card input:focus {
-        border-color: #3b6fc4 !important;
-        box-shadow: 0 0 0 3px rgba(59,111,196,0.18) !important;
-    }
-    .auth-card input::placeholder { color: #3a4558; }
-    .auth-card input[readonly]    { opacity: 0.45; cursor: default; }
+    .auth-card input:focus { border-color:var(--primary)!important; box-shadow:0 0 0 3px var(--primary-dim)!important; }
+    .auth-card input::placeholder { color:var(--text-muted); opacity:0.7; }
+    .auth-card input[readonly] { opacity:0.45; cursor:default; }
 
-    .id-row { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
-    .id-row input { flex: 1; margin-top: 0 !important; }
+    .id-row { display:flex; gap:8px; align-items:center; margin-top:16px; }
+    .id-row input { flex:1; margin-top:0!important; }
     .btn-check {
-        flex-shrink: 0;
-        height: 46px;
-        padding: 0 13px;
-        font-size: 11px;
-        font-weight: 800;
-        background: #1e3352;
-        color: #7aaae8;
-        border: 1px solid #2d4f7a;
-        border-radius: 8px;
-        cursor: pointer;
-        white-space: nowrap;
-        letter-spacing: -0.02em;
-        transition: background 0.15s;
-        -webkit-tap-highlight-color: transparent;
+        flex-shrink:0; height:44px; padding:0 12px; font-size:11px; font-weight:700;
+        background:var(--primary-dim); color:var(--primary); border:1px solid var(--primary);
+        border-radius:var(--radius-sm); cursor:pointer; white-space:nowrap;
+        font-family:inherit; transition:background 0.15s; -webkit-tap-highlight-color:transparent;
     }
-    .btn-check:active { background: #274060; }
+    .btn-check:active { background:var(--primary); color:#fff; }
 
-    .fmsg {
-        font-size: 11px;
-        min-height: 15px;
-        margin-top: 4px;
-        line-height: 1.3;
-    }
-    .fmsg.ok  { color: #4caf82; }
-    .fmsg.err { color: #ff6b6b; }
-    .fmsg.inf { color: #7aaae8; }
+    .fmsg { font-size:11px; min-height:16px; margin-top:4px; line-height:1.4; }
+    .fmsg.ok  { color:var(--accent); }
+    .fmsg.err { color:var(--danger); }
+    .fmsg.inf { color:var(--primary); }
 
-    .auth-card .btn-primary,
     .auth-btn {
-        display: block !important;
-        width: 100% !important;
-        height: 52px !important;
-        margin-top: 24px !important;
-        background: linear-gradient(135deg, #3b6fc4 0%, #2a5298 100%) !important;
-        color: #fff !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-size: 15px !important;
-        font-weight: 800 !important;
-        cursor: pointer !important;
-        letter-spacing: -0.03em;
-        -webkit-tap-highlight-color: transparent;
-        transition: filter 0.15s;
-        box-sizing: border-box;
+        display:flex!important; align-items:center; justify-content:center;
+        width:100%!important; height:50px!important; margin-top:20px!important;
+        background:var(--primary)!important; color:#fff!important; border:none!important;
+        border-radius:var(--radius-sm)!important; font-size:15px!important; font-weight:700!important;
+        font-family:inherit; cursor:pointer!important; -webkit-tap-highlight-color:transparent;
+        transition:filter 0.15s; box-sizing:border-box;
     }
-    .auth-card .btn-primary:active,
-    .auth-btn:active { filter: brightness(0.88); }
-    .auth-card .btn-primary:disabled,
-    .auth-btn:disabled { opacity: 0.4; cursor: not-allowed !important; }
+    .auth-btn:active { filter:brightness(0.88); }
+    .auth-btn:disabled { opacity:0.4; cursor:not-allowed!important; }
 
     .btn-kakao {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 100% !important;
-        height: 52px !important;
-        margin-top: 12px !important;
-        background: #fee500 !important;
-        color: #3c1e1e !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-size: 15px !important;
-        font-weight: 800 !important;
-        cursor: pointer;
-        letter-spacing: -0.03em;
-        -webkit-tap-highlight-color: transparent;
-        transition: filter 0.15s;
-        box-sizing: border-box;
+        display:flex!important; align-items:center; justify-content:center; gap:8px;
+        width:100%!important; height:50px!important; margin-top:10px!important;
+        background:#fee500!important; color:#3c1e1e!important; border:none!important;
+        border-radius:var(--radius-sm)!important; font-size:15px!important; font-weight:700!important;
+        font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent;
+        transition:filter 0.15s; box-sizing:border-box;
     }
-    .btn-kakao:active { filter: brightness(0.88); }
-    .btn-kakao svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .btn-kakao:active { filter:brightness(0.9); }
+    .btn-kakao svg { width:20px; height:20px; flex-shrink:0; }
 
     .auth-divider {
-        display: flex; align-items: center; gap: 10px;
-        margin: 22px 0 0;
-        font-size: 11px; color: #3a4558;
+        display:flex; align-items:center; gap:10px; margin:18px 0 0;
+        font-size:11px; color:var(--text-muted);
     }
-    .auth-divider::before, .auth-divider::after {
-        content: ''; flex: 1; height: 1px;
-        background: rgba(255,255,255,0.06);
-    }
+    .auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
     .link-btn {
-        background: none; border: none;
-        color: #4a7fcb; font-size: 13px;
-        cursor: pointer; text-decoration: underline;
-        padding: 2px 0;
-        -webkit-tap-highlight-color: transparent;
+        background:none; border:none; color:var(--primary); font-size:13px;
+        cursor:pointer; text-decoration:underline; padding:2px 0; font-family:inherit;
+        -webkit-tap-highlight-color:transparent;
     }
-    .link-btn:active { color: #7aaae8; }
+    .link-btn:active { opacity:0.7; }
 
     .auth-footer-row {
-        display: flex; align-items: center; justify-content: center;
-        flex-wrap: wrap; gap: 4px;
-        margin-top: 20px;
-        font-size: 13px; color: #5a6680;
+        display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:4px;
+        margin-top:18px; font-size:13px; color:var(--text-muted);
     }
-    .auth-sep { color: #3a4558; margin: 0 4px; }
+    .auth-sep { color:var(--border-med); margin:0 2px; }
 
     .back-btn {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: none; border: none;
-        color: #5a6680; font-size: 13px;
-        cursor: pointer; margin-bottom: 16px; padding: 0;
-        -webkit-tap-highlight-color: transparent;
+        display:inline-flex; align-items:center; gap:6px; background:none; border:none;
+        color:var(--text-muted); font-size:13px; cursor:pointer; margin-bottom:14px; padding:0;
+        font-family:inherit; -webkit-tap-highlight-color:transparent;
     }
-    .back-btn:active { color: #7aaae8; }
+    .back-btn:active { color:var(--primary); }
 
-    .auth-note {
-        font-size: 11px; color: #5a6680; line-height: 1.6;
-        margin-top: 14px;
-    }
-    .auth-note a { color: #7aaae8; }
+    .auth-note { font-size:11px; color:var(--text-muted); line-height:1.6; margin-top:14px; }
+    .auth-note a { color:var(--primary); }
 
     .kakao-id-box {
-        margin-top: 14px;
-        background: #131826;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 13px;
-        color: #7aaae8;
+        margin-top:14px; background:var(--bg-sub); border:1px solid var(--border-med);
+        border-radius:var(--radius-sm); padding:10px 13px; font-size:13px; color:var(--text-sub);
     }
-    .kakao-id-box span { color: #e8edf8; font-weight: 700; }
+    .kakao-id-box span { color:var(--text-main); font-weight:700; }
 
-    /* ── 서브 모달 ── */
+    /* 서브 모달 */
     .sub-modal {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-        z-index: 8000;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
+        display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:8000;
+        align-items:center; justify-content:center; padding:20px;
     }
-    .sub-modal.open { display: flex; }
-    .sub-modal .auth-card { max-width: 340px; }
+    [data-theme="light"] .sub-modal { background:rgba(100,96,88,0.5); }
+    .sub-modal.open { display:flex; }
+    .sub-modal .auth-card { max-width:340px; }
+    .modal-overlay.open { display:flex!important; }
 
-    .modal-overlay.open { display: flex !important; }
-
-    .kakao-badge {
-        display: inline-block;
-        background: #fee500; color: #3c1e1e;
-        font-size: 9px; font-weight: 800;
-        padding: 2px 5px; border-radius: 4px;
-        vertical-align: middle; margin-left: 4px;
+    /* 닫기 버튼 (회색 계열) */
+    .btn-close {
+        background:var(--bg-sub)!important; color:var(--text-sub)!important;
+        border:1px solid var(--border-med)!important;
     }
-
-    .account-section {
-        background: #1e2434;
-        border: 1px solid rgba(74,127,203,0.2);
-        border-radius: 12px;
-        padding: 20px; margin-bottom: 20px;
-    }
-    .account-section h4 { margin: 0 0 12px; font-size: 13px; color: #7aaae8; }
-    .account-row {
-        display: flex; align-items: center;
-        justify-content: space-between;
-        margin-bottom: 8px; font-size: 12px; color: #c8d6f0;
-    }
-    .account-row span { color: #5a6680; }
-
-    .acct-btn {
-        flex: 1;
-        height: 38px !important;
-        font-size: 11px !important;
-        padding: 0 8px !important;
-        margin: 0 !important;
-        border-radius: 6px !important;
-        letter-spacing: -0.02em;
-    }
-    .acct-btn.secondary { background: linear-gradient(135deg,#2e4a6e,#1e3352) !important; }
-
-    .nav-item span, .nav-item-main > span { font-size: 10px; }
-
-    /* ── 토스트 알림 ── */
-    #toast {
-        position: fixed;
-        bottom: calc(80px + env(safe-area-inset-bottom));
-        left: 50%;
-        transform: translateX(-50%) translateY(20px);
-        background: #2a3450;
-        color: #e8edf8;
-        font-size: 13px;
-        font-weight: 600;
-        padding: 10px 20px;
-        border-radius: 20px;
-        border: 1px solid rgba(74,127,203,0.3);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        opacity: 0;
-        transition: opacity 0.25s, transform 0.25s;
-        z-index: 9999;
-        pointer-events: none;
-        white-space: nowrap;
-    }
-    #toast.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-
-    /* ── 로딩 스피너 ── */
-    .spin {
-        display: inline-block;
-        width: 14px; height: 14px;
-        border: 2px solid rgba(255,255,255,0.2);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.6s linear infinite;
-        vertical-align: middle;
-        margin-right: 6px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<!-- 토스트 알림 -->
 <div id="toast"></div>
 
-<!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════
      뷰 A: 로그인
-══════════════════════════════════════════ -->
+══════════════════════════════════════ -->
 <div id="view-login" class="view active">
     <div class="auth-screen">
         <div class="auth-card">
             <div class="auth-logo-wrap">
-                <h1 class="kitsch-logo">🚕 KATCHI - TAPSIDA</h1>
+                <div class="kitsch-logo">🚕 KATCHI-TAPSIDA</div>
                 <div class="auth-tagline">험프리스 카투사 전용 카풀 서비스<br>계정이 없다면 아래에서 회원가입하세요</div>
             </div>
-
             <label>아이디</label>
-            <input type="text" id="login-id" placeholder="아이디 입력"
-                   autocomplete="username" inputmode="text"
+            <input type="text" id="login-id" placeholder="아이디 입력" autocomplete="username" inputmode="text"
                    onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
-
             <label>비밀번호</label>
-            <input type="password" id="login-pw" placeholder="비밀번호 입력"
-                   autocomplete="current-password"
+            <input type="password" id="login-pw" placeholder="비밀번호 입력" autocomplete="current-password"
                    onkeydown="if(event.key==='Enter')doLogin()">
-
             <div id="login-msg" class="fmsg" style="margin-top:6px;"></div>
-
             <button id="login-btn" class="auth-btn" onclick="doLogin()">로그인</button>
-
             <div class="auth-divider">또는</div>
-
             <button class="btn-kakao" onclick="loginWithKakao()">
                 <svg viewBox="0 0 18 18" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M9 1C4.58 1 1 3.82 1 7.3c0 2.21 1.45 4.15 3.64 5.25l-.93 3.44a.3.3 0 0 0 .46.32L7.9 13.8A9.7 9.7 0 0 0 9 13.6c4.42 0 8-2.82 8-6.3S13.42 1 9 1z" fill="#3c1e1e"/></svg>
                 카카오로 로그인 / 가입
             </button>
-
             <div class="auth-footer-row">
                 <span>계정이 없으신가요?</span>
                 <button class="link-btn" onclick="showView('view-register')">회원가입 →</button>
@@ -373,194 +189,152 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     뷰 B: 일반 회원가입
-══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════
+     뷰 B: 회원가입
+══════════════════════════════════════ -->
 <div id="view-register" class="view">
     <div class="auth-screen">
         <div class="auth-card">
-            <button class="back-btn" onclick="showView('view-login')">
-                <i class="fas fa-arrow-left"></i> 로그인으로
-            </button>
-
+            <button class="back-btn" onclick="showView('view-login')"><i class="fas fa-arrow-left"></i> 로그인으로</button>
             <div class="auth-logo-wrap">
-                <div style="font-size:22px;font-weight:900;color:#c8d6f0;margin-bottom:4px;">✍️ 회원가입</div>
+                <div style="font-size:18px;font-weight:800;color:var(--text-main);margin-bottom:4px;">✍️ 회원가입</div>
                 <div class="auth-tagline">아래 정보를 입력해 계정을 만드세요</div>
             </div>
-
-            <label>아이디 <span style="color:#ff6b6b">*</span></label>
+            <label>아이디 <span style="color:var(--danger)">*</span></label>
             <div class="id-row">
-                <input type="text" id="reg-id" placeholder="영문·숫자·한글 2~20자"
-                       autocomplete="username" inputmode="text" oninput="resetIdCheck()">
+                <input type="text" id="reg-id" placeholder="영문·숫자·한글 2~20자" autocomplete="username" inputmode="text" oninput="resetIdCheck()">
                 <button class="btn-check" onclick="checkId()">중복확인</button>
             </div>
             <div id="reg-id-msg" class="fmsg"></div>
-
-            <label>비밀번호 <span style="color:#ff6b6b">*</span></label>
+            <label>비밀번호 <span style="color:var(--danger)">*</span></label>
             <input type="password" id="reg-pw" placeholder="4자 이상" autocomplete="new-password">
-
-            <label>비밀번호 확인 <span style="color:#ff6b6b">*</span></label>
+            <label>비밀번호 확인 <span style="color:var(--danger)">*</span></label>
             <input type="password" id="reg-pw2" placeholder="비밀번호 재입력" autocomplete="new-password">
-
-            <label>실명 <span style="color:#ff6b6b">*</span></label>
+            <label>실명 <span style="color:var(--danger)">*</span></label>
             <input type="text" id="reg-name" placeholder="홍길동" autocomplete="name">
-
-            <label>휴대폰 번호 <span style="color:#ff6b6b">*</span></label>
+            <label>휴대폰 번호 <span style="color:var(--danger)">*</span></label>
             <input type="tel" id="reg-phone" placeholder="01012345678" autocomplete="tel" inputmode="numeric">
-
             <label>생년월일</label>
             <input type="date" id="reg-birth" autocomplete="bday">
-
-            <label>이메일 <span style="color:#5a6680;font-weight:400;text-transform:none;">(비밀번호 찾기용, 선택)</span></label>
+            <label>이메일 <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;">(비밀번호 찾기용, 선택)</span></label>
             <input type="email" id="reg-email" placeholder="example@email.com" autocomplete="email" inputmode="email">
-
-            <div class="auth-note">
-                가입 시 <a href="#" onclick="openPrivacy();return false;">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.
-            </div>
-
-            <div id="reg-global-msg" class="fmsg" style="margin-top:8px;font-size:12px;"></div>
-
+            <div class="auth-note">가입 시 <a href="#" onclick="openPrivacy();return false;">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.</div>
+            <div id="reg-global-msg" class="fmsg" style="margin-top:8px;"></div>
             <button id="reg-submit-btn" class="auth-btn" onclick="doRegister()">가입하기</button>
         </div>
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════
      뷰 C: 카카오 추가정보
-══════════════════════════════════════════ -->
+══════════════════════════════════════ -->
 <div id="view-kakao-register" class="view">
     <div class="auth-screen">
         <div class="auth-card">
             <div class="auth-logo-wrap">
-                <div style="font-size:14px;font-weight:800;color:#3c1e1e;background:#fee500;display:inline-block;padding:4px 12px;border-radius:6px;margin-bottom:10px;">카카오 연동</div>
-                <div style="font-size:20px;font-weight:900;color:#c8d6f0;margin-bottom:4px;">추가 정보 입력</div>
-                <div class="auth-tagline">안전한 카풀을 위해 실명과 연락처를 확인합니다<br><span style="color:#4caf82;font-size:11px;">✓ 카카오에서 받은 정보가 미리 채워졌어요</span></div>
+                <div style="display:inline-block;background:#fee500;color:#3c1e1e;font-size:12px;font-weight:800;padding:3px 10px;border-radius:var(--radius-sm);margin-bottom:10px;">카카오 연동</div>
+                <div style="font-size:18px;font-weight:800;color:var(--text-main);margin-bottom:4px;">추가 정보 입력</div>
+                <div class="auth-tagline">안전한 카풀을 위해 실명과 연락처를 확인합니다<br><span style="color:var(--accent);font-size:11px;">✓ 카카오에서 받은 정보가 미리 채워졌어요</span></div>
             </div>
-
             <div class="kakao-id-box">서비스 아이디 (자동생성): <span id="kr-userid-display">-</span></div>
-
-            <label>실명 <span style="color:#ff6b6b">*</span></label>
+            <label>실명 <span style="color:var(--danger)">*</span></label>
             <input type="text" id="kr-name" placeholder="홍길동" autocomplete="name">
-
-            <label>휴대폰 번호 <span style="color:#ff6b6b">*</span></label>
+            <label>휴대폰 번호 <span style="color:var(--danger)">*</span></label>
             <input type="tel" id="kr-phone" placeholder="01012345678" autocomplete="tel" inputmode="numeric">
-
             <label>생년월일</label>
             <input type="date" id="kr-birth" autocomplete="bday">
-
-            <label>이메일 <span style="color:#5a6680;font-weight:400;text-transform:none;">(선택)</span></label>
+            <label>이메일 <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;">(선택)</span></label>
             <input type="email" id="kr-email" placeholder="example@email.com" autocomplete="email" inputmode="email">
-
-            <div class="auth-note">
-                가입 시 <a href="#" onclick="openPrivacy();return false;">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.
-            </div>
-
-            <div id="kr-msg" class="fmsg" style="margin-top:8px;font-size:12px;"></div>
-
+            <div class="auth-note">가입 시 <a href="#" onclick="openPrivacy();return false;">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.</div>
+            <div id="kr-msg" class="fmsg" style="margin-top:8px;"></div>
             <button id="kr-submit-btn" class="auth-btn" onclick="doKakaoRegister()">시작하기 🫡</button>
         </div>
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════
      뷰 D: 메인 앱
-══════════════════════════════════════════ -->
+══════════════════════════════════════ -->
 <div id="view-main" class="view">
 <div class="container">
 
     <!-- 가이드 모달 -->
     <div id="guide-modal" class="modal-overlay" style="display:none;">
-        <div class="card modal-content" style="max-width:320px;text-align:left;">
-            <h3 style="color:var(--accent);margin-bottom:15px;">이용 가이드 🫡</h3>
-            <div style="font-size:13px;color:#c8d6f0;line-height:1.7;display:flex;flex-direction:column;gap:10px;">
-                <p style="margin:0"><strong>1. 합승하기</strong> — 목록에서 원하는 방의 [합승] 버튼을 누르면 참여됩니다.</p>
-                <p style="margin:0"><strong>2. 검색하기</strong> — 날짜·출발·도착 필터로 원하는 카풀을 찾아보세요.</p>
-                <p style="margin:0"><strong>3. 제안하기</strong> — 하단 [+] 버튼으로 카풀 방을 만드세요.</p>
-                <p style="margin:0"><strong>4. 정산하기</strong> — 도착 후 결제자가 금액·계좌를 등록하면 더치페이 금액이 표시됩니다.</p>
-                <p style="margin:0"><strong>5. 공유하기</strong> — 상단 [공유] 버튼으로 전우들에게 알려주세요!</p>
+        <div class="card modal-content" style="max-width:320px;">
+            <h3>이용 가이드 🫡</h3>
+            <div style="font-size:13px;color:var(--text-sub);line-height:1.8;display:flex;flex-direction:column;gap:8px;">
+                <p style="margin:0"><strong style="color:var(--text-main);">1. 합승하기</strong> — 목록에서 [합승] 버튼을 누르면 참여됩니다.</p>
+                <p style="margin:0"><strong style="color:var(--text-main);">2. 검색하기</strong> — 날짜·출발·도착 필터로 원하는 카풀을 찾아보세요.</p>
+                <p style="margin:0"><strong style="color:var(--text-main);">3. 제안하기</strong> — 하단 [+] 버튼으로 카풀 방을 만드세요.</p>
+                <p style="margin:0"><strong style="color:var(--text-main);">4. 정산하기</strong> — 도착 후 결제자가 금액·계좌를 등록하면 더치페이 금액이 표시됩니다.</p>
+                <p style="margin:0"><strong style="color:var(--text-main);">5. 공유하기</strong> — 상단 [공유] 버튼으로 전우들에게 알려주세요!</p>
             </div>
-            <button class="btn-primary" onclick="closeModal('guide-modal')" style="margin-top:20px;">확인했습니다 🫡</button>
+            <button class="btn-primary" onclick="closeModal('guide-modal')" style="margin-top:16px;">확인했습니다 🫡</button>
         </div>
     </div>
 
     <!-- 헤더 -->
     <div class="kitsch-header">
-        <div class="user-info-box" style="margin:0;flex:1;min-width:0;overflow:hidden;">
-            <div class="user-status" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                <span id="header-user-id" class="user-id">-</span>
-                <span id="header-kakao-badge" class="kakao-badge" style="display:none;">카카오</span>님
+        <div class="user-info-box">
+            <div class="user-status">
+                <span id="header-user-id" class="user-id">-</span>님
             </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:10px;">
-            <div onclick="openModal('guide-modal')" style="cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);color:#fff;width:30px;height:30px;border-radius:50%;font-size:13px;border:1px solid rgba(255,255,255,0.15);">
-                <i class="fas fa-question"></i>
-            </div>
-            <div onclick="shareApp()" style="cursor:pointer;display:flex;align-items:center;gap:4px;background:#fee500;color:#3c1e1e;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:800;white-space:nowrap;">
-                <i class="fas fa-share-alt" style="font-size:10px;"></i> 공유
-            </div>
+        <div class="header-actions">
+            <button class="btn-theme" onclick="toggleTheme()" id="btn-theme" title="테마 전환">🌙</button>
+            <button class="btn-icon" onclick="openModal('guide-modal')" title="이용 가이드"><i class="fas fa-question"></i></button>
+            <button class="btn-share" onclick="shareApp()"><i class="fas fa-share-alt" style="font-size:10px;"></i> 공유</button>
             <div class="logout-badge" onclick="logout()">EXIT</div>
         </div>
     </div>
 
     <!-- 탭: 검색 -->
     <div id="tab-home" class="tab-content">
-        <div class="card" style="background:#1e2434;border:1px solid rgba(74,127,203,0.18);padding:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                <div style="font-size:13px;font-weight:800;color:#7aaae8;">🔍 필터 검색</div>
-                <button onclick="resetSearch()" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;padding:0;">↺ 초기화</button>
+        <div class="filter-panel">
+            <div class="filter-panel-header">
+                <span class="filter-label">🔍 필터 검색</span>
+                <button class="btn-reset" onclick="resetSearch()"><i class="fas fa-undo" style="font-size:10px;"></i> 초기화</button>
             </div>
-            <div style="margin-bottom:12px;">
+            <div style="margin-bottom:10px;">
                 <label>날짜</label>
-                <select id="search-date" onchange="searchPool()" style="height:42px;font-size:14px;margin-bottom:0;"></select>
+                <select id="search-date" onchange="searchPool()" style="height:40px;margin-bottom:0;"></select>
             </div>
-            <div style="display:flex;gap:10px;">
-                <div style="flex:1;">
-                    <label>출발</label>
-                    <select id="search-origin" onchange="searchPool()" style="height:42px;font-size:14px;margin-bottom:0;"></select>
-                </div>
-                <div style="flex:1;">
-                    <label>도착</label>
-                    <select id="search-dest" onchange="searchPool()" style="height:42px;font-size:14px;margin-bottom:0;"></select>
-                </div>
+            <div style="display:flex;gap:8px;">
+                <div style="flex:1;"><label>출발</label><select id="search-origin" onchange="searchPool()" style="height:40px;margin-bottom:0;"></select></div>
+                <div style="flex:1;"><label>도착</label><select id="search-dest" onchange="searchPool()" style="height:40px;margin-bottom:0;"></select></div>
             </div>
         </div>
-
         <div id="list-title" class="section-title">실시간 카풀 목록</div>
-        <div id="room-list"><div style="text-align:center;padding:40px;color:#5a6680;">목록을 불러오는 중...</div></div>
+        <div id="room-list"><div style="text-align:center;padding:40px;color:var(--text-muted);">목록을 불러오는 중...</div></div>
     </div>
 
-    <!-- 탭: 기록·계정 -->
+    <!-- 탭: MY -->
     <div id="tab-my" class="tab-content" style="display:none;">
-
         <div class="account-section">
-            <h4>⚙️ 계정 설정</h4>
-            <div class="account-row"><span>아이디</span><strong id="acct-id" style="font-size:13px;">-</strong></div>
-            <div class="account-row"><span>로그인 방식</span><strong id="acct-provider" style="font-size:12px;">-</strong></div>
-            <div class="account-row"><span>등록 이메일</span><strong id="acct-email" style="font-size:11px;color:#5a6680;">미등록</strong></div>
-            <div style="display:flex;gap:8px;margin-top:12px;">
+            <h4>계정 설정</h4>
+            <div class="account-row"><span>아이디</span><strong id="acct-id">-</strong></div>
+            <div class="account-row"><span>로그인 방식</span><strong id="acct-provider">-</strong></div>
+            <div class="account-row"><span>등록 이메일</span><strong id="acct-email" style="color:var(--text-muted);">미등록</strong></div>
+            <div style="display:flex;gap:8px;margin-top:14px;">
                 <button class="btn-primary acct-btn" onclick="openChangePwModal()">🔒 비밀번호 변경</button>
                 <button class="btn-primary acct-btn secondary" onclick="openSubModal('email-modal')">📧 이메일 등록</button>
             </div>
         </div>
-
         <div class="section-title">참여 중인 카풀</div>
-        <div id="my-room-list"><div style="text-align:center;padding:30px;color:#5a6680;">참여 중인 카풀이 없습니다.</div></div>
-
-        <div class="section-title" style="margin-top:32px;border-top:1px solid var(--border);padding-top:20px;">📜 이용 내역</div>
-        <div id="history-list"><div style="text-align:center;padding:20px;color:#5a6680;">이용 기록을 불러오는 중...</div></div>
+        <div id="my-room-list"><div style="text-align:center;padding:30px;color:var(--text-muted);">참여 중인 카풀이 없습니다.</div></div>
+        <div class="section-title" style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border);">📜 이용 내역</div>
+        <div id="history-list"><div style="text-align:center;padding:20px;color:var(--text-muted);">이용 기록을 불러오는 중...</div></div>
     </div>
 
     <footer class="kitsch-footer">
         <div class="footer-content">
             <p class="copyright">© 2026 KATCHI-TAPSIDA. ALL RIGHTS RESERVED.</p>
-            <div style="font-size:10px;color:#4e5c75;line-height:2;margin:8px 0;">
+            <div style="font-size:10px;color:var(--text-muted);line-height:2;margin:6px 0;">
                 <span>상호: 정호원</span> · <span>대표자: 정호원</span><br>
                 <span>사업자등록번호: 818-09-02663</span><br>
-                <span>이메일: <a href="mailto:jeonghowon9@gmail.com" style="color:#5a6680;">jeonghowon9@gmail.com</a></span>
+                <span>이메일: <a href="mailto:jeonghowon9@gmail.com" style="color:var(--text-muted);">jeonghowon9@gmail.com</a></span>
             </div>
-            <div class="contact-info">
-                <a href="#" onclick="openPrivacy();return false;" style="color:#5a6680;text-decoration:underline;font-size:11px;">개인정보처리방침</a>
-            </div>
+            <div class="contact-info"><a href="#" onclick="openPrivacy();return false;">개인정보처리방침</a></div>
             <p class="disclaimer">본 서비스는 개인 간 카풀 매칭을 돕는 플랫폼으로, 실제 운송 책임은 당사자에게 있습니다.</p>
         </div>
     </footer>
@@ -568,14 +342,14 @@
     <!-- 하단 네비 -->
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
-            <i class="fas fa-search" style="font-size:18px;"></i><span>검색</span>
+            <i class="fas fa-search"></i><span>검색</span>
         </div>
         <div class="nav-item-main" onclick="openModal('create-modal')">
             <div class="main-circle"><i class="fas fa-plus"></i></div>
             <span>제안하기</span>
         </div>
         <div class="nav-item" id="nav-my" onclick="switchTab('my')">
-            <i class="fas fa-user" style="font-size:18px;"></i><span>MY</span>
+            <i class="fas fa-user"></i><span>MY</span>
         </div>
     </div>
 
@@ -583,28 +357,22 @@
     <div id="create-modal" class="modal-overlay" style="display:none;">
         <div class="card modal-content" style="overflow-y:auto;max-height:90vh;">
             <h3>📅 새 카풀 제안</h3>
-            <label>출발지</label>
-            <select id="origin-select" onchange="updateSpecificSpots()"></select>
+            <label>출발지</label><select id="origin-select" onchange="updateSpecificSpots()"></select>
             <label>세부 접선 위치</label>
-            <select id="specific-spot-select" onchange="toggleCustomSpot()">
-                <option value="">출발지를 먼저 선택하세요</option>
-            </select>
+            <select id="specific-spot-select" onchange="toggleCustomSpot()"><option value="">출발지를 먼저 선택하세요</option></select>
             <input type="text" id="custom-spot-input" placeholder="직접 입력 (예: 편의점 앞)" style="display:none;">
-            <label>목적지</label>
-            <select id="dest-select"></select>
-            <label>날짜</label>
-            <input type="date" id="date-input">
-            <label>시간</label>
-            <input type="time" id="time-input">
+            <label>목적지</label><select id="dest-select"></select>
+            <label>날짜</label><input type="date" id="date-input">
+            <label>시간</label><input type="time" id="time-input">
             <label>최대 탑승 인원 (본인 포함)</label>
             <select id="max-pax-select">
                 <option value="2">2명 (단란하게)</option>
                 <option value="3">3명 (적당하게)</option>
                 <option value="4" selected>4명 (꽉 채워서)</option>
             </select>
-            <div style="display:flex;gap:8px;margin-top:20px;">
+            <div style="display:flex;gap:8px;margin-top:16px;">
                 <button class="btn-primary" onclick="createRoom()" style="flex:2;margin:0;">제안하기</button>
-                <button class="btn-primary" onclick="closeModal('create-modal')" style="flex:1;margin:0;background:linear-gradient(135deg,#4a5568,#374151) !important;">닫기</button>
+                <button class="btn-primary btn-close" onclick="closeModal('create-modal')" style="flex:1;margin:0;">닫기</button>
             </div>
         </div>
     </div>
@@ -613,103 +381,86 @@
     <div id="payment-modal" class="modal-overlay" style="display:none;">
         <div class="card modal-content">
             <h3>💰 정산 정보 등록</h3>
-            <label>총 결제 금액 (원)</label>
-            <input type="number" id="pay-amount" placeholder="예: 12000" inputmode="numeric">
+            <label>총 결제 금액 (원)</label><input type="number" id="pay-amount" placeholder="예: 12000" inputmode="numeric">
             <label>은행</label>
             <select id="pay-bank">
-                <option value="국민은행">국민은행</option>
-                <option value="신한은행">신한은행</option>
-                <option value="카카오뱅크">카카오뱅크</option>
-                <option value="토스뱅크">토스뱅크</option>
+                <option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
+                <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option>
                 <option value="기타">기타</option>
             </select>
-            <label>계좌번호</label>
-            <input type="text" id="pay-account" placeholder="'-' 제외 입력" inputmode="numeric">
-            <div style="display:flex;gap:8px;margin-top:20px;">
+            <label>계좌번호</label><input type="text" id="pay-account" placeholder="'-' 제외 입력" inputmode="numeric">
+            <div style="display:flex;gap:8px;margin-top:16px;">
                 <button class="btn-primary" onclick="submitPayment()" style="flex:2;margin:0;">정산 요청</button>
-                <button class="btn-primary" onclick="closeModal('payment-modal')" style="flex:1;margin:0;background:linear-gradient(135deg,#4a5568,#374151) !important;">취소</button>
+                <button class="btn-primary btn-close" onclick="closeModal('payment-modal')" style="flex:1;margin:0;">취소</button>
             </div>
         </div>
     </div>
 
-</div><!-- /container -->
-</div><!-- /view-main -->
+</div></div><!-- /container /view-main -->
 
-<!-- ══════════════════════════════════════════
-     서브 모달 (뷰 독립적)
-══════════════════════════════════════════ -->
-
-<!-- 비밀번호 찾기 -->
+<!-- ══════════════════════════════════════
+     서브 모달
+══════════════════════════════════════ -->
 <div id="forgot-modal" class="sub-modal">
     <div class="auth-card" style="max-width:340px;">
-        <h3 style="margin:0 0 6px;font-size:16px;color:#c0cce0;">🔑 비밀번호 찾기</h3>
-        <p style="font-size:12px;color:#5a6680;margin-bottom:16px;">등록된 이메일로 재설정 링크를 보내드립니다.</p>
+        <h3>🔑 비밀번호 찾기</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">등록된 이메일로 재설정 링크를 보내드립니다.</p>
         <label>이메일 주소</label>
-        <input type="email" id="forgot-email" placeholder="example@email.com" inputmode="email"
-               onkeydown="if(event.key==='Enter')submitForgot()">
-        <div id="forgot-msg" class="fmsg" style="margin-top:6px;"></div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
+        <input type="email" id="forgot-email" placeholder="example@email.com" inputmode="email" onkeydown="if(event.key==='Enter')submitForgot()">
+        <div id="forgot-msg" class="fmsg" style="margin-top:5px;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
             <button class="auth-btn" onclick="submitForgot()" style="flex:1;margin:0;">전송하기</button>
-            <button class="auth-btn" onclick="closeSubModal('forgot-modal')" style="flex:1;margin:0;background:linear-gradient(135deg,#4a5568,#374151) !important;">닫기</button>
+            <button class="auth-btn btn-close" onclick="closeSubModal('forgot-modal')" style="flex:1;margin:0;">닫기</button>
         </div>
     </div>
 </div>
 
-<!-- 비밀번호 재설정 (이메일 링크 진입) -->
 <div id="reset-modal" class="sub-modal">
     <div class="auth-card" style="max-width:340px;">
-        <h3 style="margin:0 0 6px;font-size:16px;color:#c0cce0;">🔐 새 비밀번호 설정</h3>
-        <p style="font-size:12px;color:#5a6680;margin-bottom:16px;">새로 사용할 비밀번호를 입력하세요.</p>
-        <label>새 비밀번호</label>
-        <input type="password" id="reset-pw" placeholder="4자 이상">
-        <label>새 비밀번호 확인</label>
-        <input type="password" id="reset-pw2" placeholder="다시 입력">
-        <div id="reset-msg" class="fmsg err" style="margin-top:6px;"></div>
-        <button class="auth-btn" onclick="submitReset()" style="margin-top:16px;">변경하기</button>
+        <h3>🔐 새 비밀번호 설정</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">새로 사용할 비밀번호를 입력하세요.</p>
+        <label>새 비밀번호</label><input type="password" id="reset-pw" placeholder="4자 이상">
+        <label>새 비밀번호 확인</label><input type="password" id="reset-pw2" placeholder="다시 입력">
+        <div id="reset-msg" class="fmsg" style="color:var(--danger);margin-top:5px;"></div>
+        <button class="auth-btn" onclick="submitReset()" style="margin-top:14px;">변경하기</button>
     </div>
 </div>
 
-<!-- 비밀번호 변경 (로그인 상태) -->
 <div id="change-pw-modal" class="sub-modal">
     <div class="auth-card" style="max-width:340px;">
-        <h3 style="margin:0 0 14px;font-size:16px;color:#c0cce0;">🔒 비밀번호 변경</h3>
+        <h3>🔒 비밀번호 변경</h3>
         <div id="change-pw-current-wrap">
-            <label>현재 비밀번호</label>
-            <input type="password" id="change-pw-current" placeholder="현재 비밀번호">
+            <label>현재 비밀번호</label><input type="password" id="change-pw-current" placeholder="현재 비밀번호">
         </div>
-        <label>새 비밀번호</label>
-        <input type="password" id="change-pw-new" placeholder="4자 이상">
-        <label>새 비밀번호 확인</label>
-        <input type="password" id="change-pw-new2" placeholder="다시 입력">
-        <div id="change-pw-msg" class="fmsg err" style="margin-top:6px;"></div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
+        <label>새 비밀번호</label><input type="password" id="change-pw-new" placeholder="4자 이상">
+        <label>새 비밀번호 확인</label><input type="password" id="change-pw-new2" placeholder="다시 입력">
+        <div id="change-pw-msg" class="fmsg" style="color:var(--danger);margin-top:5px;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
             <button class="auth-btn" onclick="submitChangePw()" style="flex:1;margin:0;">변경하기</button>
-            <button class="auth-btn" onclick="closeSubModal('change-pw-modal')" style="flex:1;margin:0;background:linear-gradient(135deg,#4a5568,#374151) !important;">닫기</button>
+            <button class="auth-btn btn-close" onclick="closeSubModal('change-pw-modal')" style="flex:1;margin:0;">닫기</button>
         </div>
     </div>
 </div>
 
-<!-- 이메일 등록 -->
 <div id="email-modal" class="sub-modal">
     <div class="auth-card" style="max-width:340px;">
-        <h3 style="margin:0 0 6px;font-size:16px;color:#c0cce0;">📧 이메일 등록</h3>
-        <p style="font-size:12px;color:#5a6680;margin-bottom:16px;">비밀번호 찾기에 사용할 이메일을 등록하세요.</p>
+        <h3>📧 이메일 등록</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">비밀번호 찾기에 사용할 이메일을 등록하세요.</p>
         <label>이메일 주소</label>
         <input type="email" id="reg-email-modal" placeholder="example@email.com" inputmode="email">
-        <div id="email-msg" class="fmsg" style="margin-top:6px;"></div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
+        <div id="email-msg" class="fmsg" style="margin-top:5px;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
             <button class="auth-btn" onclick="submitEmail()" style="flex:1;margin:0;">등록하기</button>
-            <button class="auth-btn" onclick="closeSubModal('email-modal')" style="flex:1;margin:0;background:linear-gradient(135deg,#4a5568,#374151) !important;">닫기</button>
+            <button class="auth-btn btn-close" onclick="closeSubModal('email-modal')" style="flex:1;margin:0;">닫기</button>
         </div>
     </div>
 </div>
 
-<!-- 개인정보처리방침 -->
 <div id="privacy-modal" class="sub-modal">
     <div class="auth-card" style="max-width:380px;max-height:85vh;overflow-y:auto;">
-        <h3 style="margin:0 0 10px;font-size:15px;color:#c0cce0;">🛡️ 개인정보처리방침</h3>
-        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:0 0 14px;">
-        <div style="font-size:12px;color:#94a3b8;line-height:1.8;white-space:pre-wrap;">KATCHI-TAPSIDA 개인정보처리방침 (2026.04.28 시행)
+        <h3>🛡️ 개인정보처리방침</h3>
+        <hr style="border:none;border-top:1px solid var(--border);margin:0 0 14px;">
+        <div style="font-size:12px;color:var(--text-sub);line-height:1.9;white-space:pre-wrap;">KATCHI-TAPSIDA 개인정보처리방침 (2026.04.28 시행)
 
 1. 수집 항목
 필수: 아이디, 비밀번호, 이름, 휴대폰 번호
@@ -739,884 +490,629 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     스크립트
-══════════════════════════════════════════ -->
 <script>
 'use strict';
 
 // ── 전역 상태 ──
 const socket = io();
-let myId       = '';
-let myProvider = 'local';
-let mySessionId = '';          // ✅ FIX: strict mode ReferenceError 방지
-let allRoomsData = [];
-let isSearchMode = false;
-let currentSearchCriteria = { origin:'', dest:'', date:'' };
-let currentRoomIdForPay = null;
-let resetToken  = null;
-let idChecked   = false;
-let kakaoTempToken = null;
-let kakaoUserId    = null;
-let cachedSpecificSpots = {};
+let myId='', myProvider='local', mySessionId='';
+let allRoomsData=[], isSearchMode=false;
+let currentSearchCriteria={origin:'',dest:'',date:''};
+let currentRoomIdForPay=null, resetToken=null;
+let idChecked=false, kakaoTempToken=null, kakaoUserId=null;
+let cachedSpecificSpots={}, loginTimer=null;
 
-// ── 로그인 소켓 타임아웃 ──
-let loginTimer = null;
-
-// ── 카카오 인앱브라우저 탈출 ──
-(function () {
-    const ua = navigator.userAgent.toLowerCase();
-    if (!ua.includes('kakaotalk')) return;
-    const cur = location.href;
-    if (ua.includes('iphone') || ua.includes('ipad')) {
-        location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(cur);
-    } else {
-        location.href = 'intent://' + cur.replace(/https?:\/\//, '') + '#Intent;scheme=http;package=com.android.chrome;end';
-    }
+// ── 테마 ──
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    const btn=document.getElementById('btn-theme');
+    if(btn) btn.textContent=theme==='dark'?'🌙':'☀️';
+    const meta=document.getElementById('theme-color-meta');
+    if(meta) meta.content=theme==='dark'?'#13161f':'#f5f4ef';
+}
+function toggleTheme() {
+    applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+}
+// 초기 테마 (저장값 or 시스템 설정)
+(function(){
+    const saved=localStorage.getItem('theme');
+    if(saved) applyTheme(saved);
+    else applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
 })();
 
-// ════════════════════════════
-// 토스트
-// ════════════════════════════
-let _toastTimer = null;
-function showToast(msg, duration = 2500) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
+// ── 카카오 인앱브라우저 탈출 ──
+(function(){
+    const ua=navigator.userAgent.toLowerCase();
+    if(!ua.includes('kakaotalk')) return;
+    const cur=location.href;
+    if(ua.includes('iphone')||ua.includes('ipad'))
+        location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(cur);
+    else
+        location.href='intent://'+cur.replace(/https?:\/\//,'')+
+            '#Intent;scheme=http;package=com.android.chrome;end';
+})();
+
+// ── 토스트 ──
+let _toastTimer=null;
+function showToast(msg,duration=2500){
+    const el=document.getElementById('toast');
+    el.textContent=msg; el.classList.add('show');
     clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+    _toastTimer=setTimeout(()=>el.classList.remove('show'),duration);
 }
 
-// ════════════════════════════
-// 뷰 전환
-// ════════════════════════════
-function showView(id) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+// ── 뷰 전환 ──
+function showView(id){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    const screen = document.querySelector('#' + id + ' .auth-screen');
-    if (screen) screen.scrollTop = 0;
+    const s=document.querySelector('#'+id+' .auth-screen');
+    if(s) s.scrollTop=0;
 }
 
-// ════════════════════════════
-// URL 파라미터 처리
-// ════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
-    const p = new URLSearchParams(location.search);
+// ── URL 파라미터 ──
+window.addEventListener('DOMContentLoaded',()=>{
+    const p=new URLSearchParams(location.search);
 
-    // 카카오 로그인 완료 (기존 유저)
-    if (p.get('kakao_token')) {
-        history.replaceState({}, '', '/');
-        (async () => {
-            try {
-                const res  = await fetch('/api/kakao-verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: p.get('kakao_token') })
-                });
-                const data = await res.json();
-                if (res.ok && data.ok) {
-                    handleLoginData(data);
-                } else {
-                    showView('view-login');
-                    setLoginMsg(data.error || '카카오 로그인에 실패했습니다.');
-                }
-            } catch (e) {
-                showView('view-login');
-                setLoginMsg('카카오 로그인 처리 중 오류가 발생했습니다.');
-            }
+    if(p.get('kakao_token')){
+        history.replaceState({},'','/');
+        (async()=>{
+            try{
+                const res=await fetch('/api/kakao-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:p.get('kakao_token')})});
+                const data=await res.json();
+                if(res.ok&&data.ok) handleLoginData(data);
+                else{showView('view-login');setLoginMsg(data.error||'카카오 로그인에 실패했습니다.');}
+            }catch{showView('view-login');setLoginMsg('카카오 로그인 처리 중 오류가 발생했습니다.');}
         })();
         return;
     }
-
-    // 카카오 신규 가입 추가정보
-    if (p.get('kakao_register') === '1') {
-        history.replaceState({}, '', '/');
-        kakaoTempToken = p.get('tempToken');
-        kakaoUserId    = p.get('userId');
-        document.getElementById('kr-userid-display').textContent = kakaoUserId || '';
-        document.getElementById('kr-name').value  = decodeURIComponent(p.get('name')  || '');
-        document.getElementById('kr-phone').value = decodeURIComponent(p.get('phone') || '');
-        document.getElementById('kr-birth').value = p.get('birth') || '';
-        document.getElementById('kr-email').value = decodeURIComponent(p.get('email') || '');
-        showView('view-kakao-register');
-        return;
+    if(p.get('kakao_register')==='1'){
+        history.replaceState({},'','/');
+        kakaoTempToken=p.get('tempToken'); kakaoUserId=p.get('userId');
+        document.getElementById('kr-userid-display').textContent=kakaoUserId||'';
+        document.getElementById('kr-name').value=decodeURIComponent(p.get('name')||'');
+        document.getElementById('kr-phone').value=decodeURIComponent(p.get('phone')||'');
+        document.getElementById('kr-birth').value=p.get('birth')||'';
+        document.getElementById('kr-email').value=decodeURIComponent(p.get('email')||'');
+        showView('view-kakao-register'); return;
     }
-
-    // 카카오 오류
-    if (p.get('kakao_error')) {
-        history.replaceState({}, '', '/');
-        showView('view-login');
-        setLoginMsg('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
-        return;
+    if(p.get('kakao_error')){
+        history.replaceState({},'','/'); showView('view-login');
+        setLoginMsg('카카오 로그인에 실패했습니다. 다시 시도해주세요.'); return;
     }
-
-    // 비밀번호 재설정 링크
-    const tok = p.get('token');
-    if (tok && location.pathname.includes('reset-password')) {
-        resetToken = tok;
-        history.replaceState({}, '', '/');
-        openSubModal('reset-modal');
-        return;
+    const tok=p.get('token');
+    if(tok&&location.pathname.includes('reset-password')){
+        resetToken=tok; history.replaceState({},'','/'); openSubModal('reset-modal'); return;
     }
-
-    // 세션 자동 로그인 (REST 우선, 소켓 폴백)
-    const savedSession = localStorage.getItem('session_id');
-    if (savedSession) {
-        (async () => {
-            try {
-                const res = await fetch('/api/session-login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: savedSession })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.ok) {
-                        // REST 성공 → 소켓도 세션 등록 (서버 socket.userId 설정)
-                        socket.emit('session_login', { sessionId: savedSession });
-                        handleLoginData({ ...data, sessionId: savedSession });
-                    } else {
-                        localStorage.removeItem('session_id');
-                    }
-                } else {
-                    localStorage.removeItem('session_id');
-                }
-            } catch (e) {
-                // 네트워크 오류 → 소켓 폴백
-                socket.emit('session_login', { sessionId: savedSession });
-            }
+    const saved=localStorage.getItem('session_id');
+    if(saved){
+        (async()=>{
+            try{
+                const res=await fetch('/api/session-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:saved})});
+                if(res.ok){const d=await res.json();if(d.ok){socket.emit('session_login',{sessionId:saved});handleLoginData({...d,sessionId:saved});}else localStorage.removeItem('session_id');}
+                else localStorage.removeItem('session_id');
+            }catch{socket.emit('session_login',{sessionId:saved});}
         })();
     }
 });
 
-// ════════════════════════════
-// 로그인
-// ════════════════════════════
-function setLoginMsg(txt, cls = 'err') {
-    const el = document.getElementById('login-msg');
-    if (!el) return;
-    el.className = 'fmsg ' + cls;
-    el.innerHTML = txt;
+// ── 로그인 ──
+function setLoginMsg(txt,cls='err'){
+    const el=document.getElementById('login-msg');if(!el)return;
+    el.className='fmsg '+cls; el.innerHTML=txt;
 }
-
-function doLogin() {
-    const userId = (document.getElementById('login-id').value  || '').trim();
-    const userPw =  document.getElementById('login-pw').value  || '';
+function doLogin(){
+    const userId=(document.getElementById('login-id').value||'').trim();
+    const userPw=document.getElementById('login-pw').value||'';
     setLoginMsg('');
-    if (!userId) return setLoginMsg('아이디를 입력하세요.');
-    if (!userPw) return setLoginMsg('비밀번호를 입력하세요.');
-
-    const btn = document.getElementById('login-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span>로그인 중...';
-
-    // ✅ FIX: 소켓 응답 없을 시 타임아웃 처리
+    if(!userId) return setLoginMsg('아이디를 입력하세요.');
+    if(!userPw) return setLoginMsg('비밀번호를 입력하세요.');
+    const btn=document.getElementById('login-btn');
+    btn.disabled=true; btn.innerHTML='<span class="spin"></span>로그인 중...';
     clearTimeout(loginTimer);
-    loginTimer = setTimeout(() => {
-        btn.disabled = false;
-        btn.textContent = '로그인';
-        setLoginMsg('응답이 없습니다. 잠시 후 다시 시도해주세요.');
-    }, 8000);
-
-    socket.emit('login', { userId, userPw });
+    loginTimer=setTimeout(()=>{resetLoginBtn();setLoginMsg('응답이 없습니다. 잠시 후 다시 시도해주세요.');},8000);
+    socket.emit('login',{userId,userPw});
 }
-
-function resetLoginBtn() {
+function resetLoginBtn(){
     clearTimeout(loginTimer);
-    const btn = document.getElementById('login-btn');
-    if (btn) { btn.disabled = false; btn.textContent = '로그인'; }
+    const btn=document.getElementById('login-btn');
+    if(btn){btn.disabled=false;btn.textContent='로그인';}
+}
+function loginWithKakao(){location.href='/auth/kakao';}
+
+function handleLoginData(data){
+    resetLoginBtn();
+    myId=data.userId; myProvider=data.provider||'local';
+    mySessionId=data.sessionId||mySessionId;
+    if(data.sessionId) localStorage.setItem('session_id',data.sessionId);
+    localStorage.removeItem('auto_id'); localStorage.removeItem('auto_pw');
+    document.getElementById('header-user-id').innerText=myId;
+    document.getElementById('acct-id').innerText=myId;
+    document.getElementById('acct-provider').innerText=
+        ({local:'아이디/비밀번호',kakao:'카카오',both:'아이디/카카오'})[myProvider]||'-';
+    if(data.email){
+        document.getElementById('acct-email').innerText=data.email;
+        document.getElementById('acct-email').style.color='var(--text-main)';
+    }
+    showView('view-main'); initMainApp();
 }
 
-function loginWithKakao() { location.href = '/auth/kakao'; }
-
-// REST / 소켓 로그인 결과 공통 처리
-function handleLoginData(data) {
-    resetLoginBtn();
-    myId        = data.userId;
-    myProvider  = data.provider || 'local';
-    mySessionId = data.sessionId || mySessionId;
-    if (data.sessionId) localStorage.setItem('session_id', data.sessionId);
-    localStorage.removeItem('auto_id');
-    localStorage.removeItem('auto_pw');
-
-    document.getElementById('header-user-id').innerText = myId;
-    const badge = document.getElementById('header-kakao-badge');
-    badge.style.display = (myProvider === 'kakao' || myProvider === 'both') ? 'inline-block' : 'none';
-
-    document.getElementById('acct-id').innerText = myId;
-    document.getElementById('acct-provider').innerText =
-        ({ local: '아이디/비밀번호', kakao: '카카오', both: '아이디/카카오' })[myProvider] || '-';
-    if (data.email) {
-        document.getElementById('acct-email').innerText    = data.email;
-        document.getElementById('acct-email').style.color = '#c8d6f0';
-    }
-
-    showView('view-main');
-    initMainApp();
-}
-
-socket.on('login_fail', ({ reason }) => {
-    resetLoginBtn();
-    localStorage.removeItem('session_id');
-    showView('view-login');
-    if (reason === 'no_user') {
-        setLoginMsg('등록되지 않은 아이디입니다. <button class="link-btn" style="font-size:12px;" onclick="showView(\'view-register\')">회원가입 →</button>');
-    } else if (reason === 'session_expired') {
-        // 세션 만료 — 조용히 로그인 화면만 보여줌
-    } else {
-        setLoginMsg('로그인에 실패했습니다.');
-    }
+socket.on('login_fail',({reason})=>{
+    resetLoginBtn(); localStorage.removeItem('session_id'); showView('view-login');
+    if(reason==='no_user') setLoginMsg('등록되지 않은 아이디입니다. <button class="link-btn" style="font-size:12px;" onclick="showView(\'view-register\')">회원가입 →</button>');
+    else if(reason==='session_expired'){}
+    else setLoginMsg('로그인에 실패했습니다.');
 });
-
-socket.on('login_success', (data) => {
-    // 이미 REST로 처리된 경우 소켓 userId·sessionId만 동기화
-    if (myId && myId === data.userId) {
-        mySessionId = data.sessionId || mySessionId;
-        if (data.sessionId) localStorage.setItem('session_id', data.sessionId);
-        return;
-    }
+socket.on('login_success',data=>{
+    if(myId&&myId===data.userId){mySessionId=data.sessionId||mySessionId;if(data.sessionId)localStorage.setItem('session_id',data.sessionId);return;}
     handleLoginData(data);
 });
-
-socket.on('error_msg', msg => {
-    if (!myId) {
-        resetLoginBtn();
-        localStorage.removeItem('session_id');
-        showView('view-login');
-        setLoginMsg(msg);
-    } else {
-        showToast('⚠️ ' + msg);
-    }
+socket.on('error_msg',msg=>{
+    if(!myId){resetLoginBtn();localStorage.removeItem('session_id');showView('view-login');setLoginMsg(msg);}
+    else showToast('⚠️ '+msg);
 });
+function logout(){if(!confirm('로그아웃 하시겠습니까?'))return;localStorage.removeItem('session_id');location.reload();}
 
-function logout() {
-    if (!confirm('로그아웃 하시겠습니까?')) return;
-    localStorage.removeItem('session_id');
-    location.reload();
+// ── 회원가입 ──
+async function checkId(){
+    const userId=(document.getElementById('reg-id').value||'').trim();
+    const msgEl=document.getElementById('reg-id-msg');
+    if(!userId){msgEl.className='fmsg err';msgEl.innerText='아이디를 입력해주세요.';return;}
+    msgEl.className='fmsg inf';msgEl.innerText='확인 중...';
+    try{
+        const r=await fetch('/api/check-id?userId='+encodeURIComponent(userId));
+        const d=await r.json();
+        if(d.available){msgEl.className='fmsg ok';msgEl.innerText='✓ 사용 가능한 아이디입니다.';idChecked=true;}
+        else{msgEl.className='fmsg err';msgEl.innerText=d.reason;idChecked=false;}
+    }catch{msgEl.className='fmsg err';msgEl.innerText='확인 중 오류가 발생했습니다.';}
 }
+function resetIdCheck(){idChecked=false;const m=document.getElementById('reg-id-msg');m.className='fmsg';m.innerText='';}
 
-// ════════════════════════════
-// 일반 회원가입
-// ════════════════════════════
-async function checkId() {
-    const userId = (document.getElementById('reg-id').value || '').trim();
-    const msgEl  = document.getElementById('reg-id-msg');
-    if (!userId) { msgEl.className = 'fmsg err'; msgEl.innerText = '아이디를 입력해주세요.'; return; }
-    msgEl.className = 'fmsg inf'; msgEl.innerText = '확인 중...';
-    try {
-        const r = await fetch('/api/check-id?userId=' + encodeURIComponent(userId));
-        const d = await r.json();
-        if (d.available) { msgEl.className = 'fmsg ok'; msgEl.innerText = '✓ 사용 가능한 아이디입니다.'; idChecked = true; }
-        else             { msgEl.className = 'fmsg err'; msgEl.innerText = d.reason; idChecked = false; }
-    } catch { msgEl.className = 'fmsg err'; msgEl.innerText = '확인 중 오류가 발생했습니다.'; }
-}
-
-function resetIdCheck() {
-    idChecked = false;
-    const m = document.getElementById('reg-id-msg');
-    m.className = 'fmsg'; m.innerText = '';
-}
-
-async function doRegister() {
-    const userId    = (document.getElementById('reg-id').value    || '').trim();
-    const password  =  document.getElementById('reg-pw').value   || '';
-    const pw2       =  document.getElementById('reg-pw2').value  || '';
-    const name      = (document.getElementById('reg-name').value  || '').trim();
-    const phone     = (document.getElementById('reg-phone').value || '').trim();
-    const birthdate =  document.getElementById('reg-birth').value || '';
-    const email     = (document.getElementById('reg-email').value || '').trim();
-    const msgEl     =  document.getElementById('reg-global-msg');
-
-    const err = t => { msgEl.className = 'fmsg err'; msgEl.innerText = t; };
-    const ok  = t => { msgEl.className = 'fmsg ok';  msgEl.innerText = t; };
-    const inf = t => { msgEl.className = 'fmsg inf'; msgEl.innerText = t; };
-
-    if (!idChecked)          return err('아이디 중복 확인을 먼저 해주세요.');
-    if (!password)           return err('비밀번호를 입력하세요.');
-    if (password.length < 4) return err('비밀번호는 4자 이상이어야 합니다.');
-    if (password !== pw2)    return err('비밀번호가 일치하지 않습니다.');
-    if (!name)               return err('실명을 입력하세요.');
-    if (!phone)              return err('휴대폰 번호를 입력하세요.');
-
-    const btn = document.getElementById('reg-submit-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span>가입 중...';
-    inf('가입 중...');
-
-    try {
-        const res  = await fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, password, name, phone, birthdate, email })
-        });
-        const data = await res.json();
-        if (res.ok && data.ok) {
+async function doRegister(){
+    const userId=(document.getElementById('reg-id').value||'').trim();
+    const password=document.getElementById('reg-pw').value||'';
+    const pw2=document.getElementById('reg-pw2').value||'';
+    const name=(document.getElementById('reg-name').value||'').trim();
+    const phone=(document.getElementById('reg-phone').value||'').trim();
+    const birthdate=document.getElementById('reg-birth').value||'';
+    const email=(document.getElementById('reg-email').value||'').trim();
+    const msgEl=document.getElementById('reg-global-msg');
+    const err=t=>{msgEl.className='fmsg err';msgEl.innerText=t;};
+    const ok=t=>{msgEl.className='fmsg ok';msgEl.innerText=t;};
+    const inf=t=>{msgEl.className='fmsg inf';msgEl.innerText=t;};
+    if(!idChecked) return err('아이디 중복 확인을 먼저 해주세요.');
+    if(!password) return err('비밀번호를 입력하세요.');
+    if(password.length<4) return err('비밀번호는 4자 이상이어야 합니다.');
+    if(password!==pw2) return err('비밀번호가 일치하지 않습니다.');
+    if(!name) return err('실명을 입력하세요.');
+    if(!phone) return err('휴대폰 번호를 입력하세요.');
+    const btn=document.getElementById('reg-submit-btn');
+    btn.disabled=true;btn.innerHTML='<span class="spin"></span>가입 중...';inf('가입 중...');
+    try{
+        const res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId,password,name,phone,birthdate,email})});
+        const data=await res.json();
+        if(res.ok&&data.ok){
             ok('✓ 가입 완료! 로그인해주세요.');
-            setTimeout(() => {
-                showView('view-login');
-                document.getElementById('login-id').value = userId;
-                document.getElementById('login-pw').value = '';
-                document.getElementById('login-pw').focus();
-            }, 1000);
-        } else {
-            err(data.error || '가입에 실패했습니다.');
-        }
-    } catch { err('서버 오류가 발생했습니다.'); }
-    finally  { btn.disabled = false; btn.textContent = '가입하기'; }
+            setTimeout(()=>{showView('view-login');document.getElementById('login-id').value=userId;document.getElementById('login-pw').value='';document.getElementById('login-pw').focus();},1000);
+        }else err(data.error||'가입에 실패했습니다.');
+    }catch{err('서버 오류가 발생했습니다.');}
+    finally{btn.disabled=false;btn.textContent='가입하기';}
 }
 
-// ════════════════════════════
-// 카카오 회원가입
-// ════════════════════════════
-async function doKakaoRegister() {
-    const name      = (document.getElementById('kr-name').value  || '').trim();
-    const phone     = (document.getElementById('kr-phone').value || '').trim();
-    const birthdate =  document.getElementById('kr-birth').value || '';
-    const email     = (document.getElementById('kr-email').value || '').trim();
-    const msgEl     =  document.getElementById('kr-msg');
-    const btn       =  document.getElementById('kr-submit-btn');
-
-    const err = t => { msgEl.className = 'fmsg err'; msgEl.innerText = t; };
-    const inf = t => { msgEl.className = 'fmsg inf'; msgEl.innerText = t; };
-
-    if (!name)  return err('실명을 입력해주세요.');
-    if (!phone) return err('휴대폰 번호를 입력해주세요.');
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span>저장 중...';
-    inf('저장 중...');
-
-    try {
-        const res  = await fetch('/api/kakao-register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tempToken: kakaoTempToken, userId: kakaoUserId, name, phone, birthdate, email })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-            err(data.error || '저장에 실패했습니다.');
-            return;
-        }
-
+// ── 카카오 회원가입 ──
+async function doKakaoRegister(){
+    const name=(document.getElementById('kr-name').value||'').trim();
+    const phone=(document.getElementById('kr-phone').value||'').trim();
+    const birthdate=document.getElementById('kr-birth').value||'';
+    const email=(document.getElementById('kr-email').value||'').trim();
+    const msgEl=document.getElementById('kr-msg');
+    const btn=document.getElementById('kr-submit-btn');
+    const err=t=>{msgEl.className='fmsg err';msgEl.innerText=t;};
+    const inf=t=>{msgEl.className='fmsg inf';msgEl.innerText=t;};
+    if(!name) return err('실명을 입력해주세요.');
+    if(!phone) return err('휴대폰 번호를 입력해주세요.');
+    btn.disabled=true;btn.innerHTML='<span class="spin"></span>저장 중...';inf('저장 중...');
+    try{
+        const res=await fetch('/api/kakao-register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tempToken:kakaoTempToken,userId:kakaoUserId,name,phone,birthdate,email})});
+        const data=await res.json();
+        if(!res.ok||!data.ok){err(data.error||'저장에 실패했습니다.');return;}
         inf('✓ 저장 완료! 입장 중...');
-
-        // ✅ kakao-register가 토큰을 소비하지 않으므로 verify로 세션 발급
-        const vRes  = await fetch('/api/kakao-verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: kakaoTempToken })
-        });
-        const vData = await vRes.json();
-        if (vRes.ok && vData.ok) {
-            handleLoginData(vData);
-        } else {
-            err(vData.error || '로그인 처리에 실패했습니다. 다시 시도해주세요.');
-        }
-    } catch { err('서버 오류가 발생했습니다.'); }
-    finally  { btn.disabled = false; btn.textContent = '시작하기 🫡'; }
+        const vRes=await fetch('/api/kakao-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:kakaoTempToken})});
+        const vData=await vRes.json();
+        if(vRes.ok&&vData.ok) handleLoginData(vData);
+        else err(vData.error||'로그인 처리에 실패했습니다. 다시 시도해주세요.');
+    }catch{err('서버 오류가 발생했습니다.');}
+    finally{btn.disabled=false;btn.textContent='시작하기 🫡';}
 }
 
-// ════════════════════════════
-// 메인 앱 초기화
-// ════════════════════════════
-async function initMainApp() {
-    // 날짜 셀렉터 채우기 (오늘~7일 후)
-    const dateSelect = document.getElementById('search-date');
-    dateSelect.innerHTML = '';
-    const todayOpt = document.createElement('option');
-    todayOpt.value = ''; todayOpt.innerText = '날짜 전체'; dateSelect.appendChild(todayOpt);
-
-    const koDays = ['일', '월', '화', '수', '목', '금', '토'];
-    for (let i = 0; i < 8; i++) {
-        const d   = new Date(Date.now() + i * 86400000);
-        const val = d.toISOString().split('T')[0];
-        const lbl = i === 0
-            ? `오늘 (${val.slice(5).replace('-', '/')})`
-            : `${val.slice(5).replace('-', '/')} (${koDays[d.getDay()]})`;
-        const opt = document.createElement('option');
-        opt.value = val; opt.innerText = lbl;
-        if (i === 0) opt.selected = true;
-        dateSelect.appendChild(opt);
+// ── 메인 앱 초기화 ──
+async function initMainApp(){
+    const dateSelect=document.getElementById('search-date');
+    dateSelect.innerHTML='';
+    const todayOpt=document.createElement('option');
+    todayOpt.value='';todayOpt.innerText='날짜 전체';dateSelect.appendChild(todayOpt);
+    const koDays=['일','월','화','수','목','금','토'];
+    for(let i=0;i<8;i++){
+        const d=new Date(Date.now()+i*86400000);
+        const val=d.toISOString().split('T')[0];
+        const lbl=i===0?`오늘 (${val.slice(5).replace('-','/')})`:`${val.slice(5).replace('-','/')} (${koDays[d.getDay()]})`;
+        const opt=document.createElement('option');
+        opt.value=val;opt.innerText=lbl;if(i===0)opt.selected=true;dateSelect.appendChild(opt);
     }
-
-    try {
-        const [locRes, spotRes] = await Promise.all([fetch('/api/locations'), fetch('/api/specific-spots')]);
-        const locations = await locRes.json();
-        cachedSpecificSpots = await spotRes.json();
-        const optHtml = locations.map(l => `<option value="${l}">${l}</option>`).join('');
-        ['origin-select', 'dest-select', 'search-origin', 'search-dest'].forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const lbl = id.includes('origin') ? '출발지' : '목적지';
-            el.innerHTML = `<option value="">${lbl} 선택(전체)</option>` + optHtml;
+    try{
+        const [locRes,spotRes]=await Promise.all([fetch('/api/locations'),fetch('/api/specific-spots')]);
+        const locations=await locRes.json();
+        cachedSpecificSpots=await spotRes.json();
+        const optHtml=locations.map(l=>`<option value="${l}">${l}</option>`).join('');
+        ['origin-select','dest-select','search-origin','search-dest'].forEach(id=>{
+            const el=document.getElementById(id);if(!el)return;
+            const lbl=id.includes('origin')?'출발지':'목적지';
+            el.innerHTML=`<option value="">${lbl} 선택(전체)</option>`+optHtml;
         });
-    } catch (e) { console.error('데이터 로드 실패', e); }
-
-    document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
+    }catch(e){console.error('데이터 로드 실패',e);}
+    document.getElementById('date-input').value=new Date().toISOString().split('T')[0];
     socket.emit('request_init_rooms');
 }
 
-// ════════════════════════════
-// 모달 유틸
-// ════════════════════════════
-function openModal(id)     { const el = document.getElementById(id); if (el) { el.style.display = 'flex'; void el.offsetHeight; } }
-function closeModal(id)    { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
-function openSubModal(id)  { document.getElementById(id)?.classList.add('open'); }
-function closeSubModal(id) { document.getElementById(id)?.classList.remove('open'); }
-function openPrivacy()     { openSubModal('privacy-modal'); }
+// ── 모달 ──
+function openModal(id){const el=document.getElementById(id);if(el){el.style.display='flex';void el.offsetHeight;}}
+function closeModal(id){const el=document.getElementById(id);if(el)el.style.display='none';}
+function openSubModal(id){document.getElementById(id)?.classList.add('open');}
+function closeSubModal(id){document.getElementById(id)?.classList.remove('open');}
+function openPrivacy(){openSubModal('privacy-modal');}
 
-// ════════════════════════════
-// 비밀번호 찾기
-// ════════════════════════════
-async function submitForgot() {
-    const email = (document.getElementById('forgot-email').value || '').trim();
-    const msgEl = document.getElementById('forgot-msg');
-    if (!email) { msgEl.className = 'fmsg err'; msgEl.innerText = '이메일을 입력해주세요.'; return; }
-    msgEl.className = 'fmsg inf'; msgEl.innerText = '전송 중...';
-    try {
-        await fetch('/api/request-reset', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        });
-        msgEl.className = 'fmsg ok'; msgEl.innerText = '이메일을 확인해주세요. (스팸 폴더도 확인)';
-    } catch { msgEl.className = 'fmsg err'; msgEl.innerText = '전송에 실패했습니다.'; }
+// ── 비밀번호 찾기 ──
+async function submitForgot(){
+    const email=(document.getElementById('forgot-email').value||'').trim();
+    const msgEl=document.getElementById('forgot-msg');
+    if(!email){msgEl.className='fmsg err';msgEl.innerText='이메일을 입력해주세요.';return;}
+    msgEl.className='fmsg inf';msgEl.innerText='전송 중...';
+    try{
+        await fetch('/api/request-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+        msgEl.className='fmsg ok';msgEl.innerText='이메일을 확인해주세요. (스팸 폴더도 확인)';
+    }catch{msgEl.className='fmsg err';msgEl.innerText='전송에 실패했습니다.';}
 }
 
-async function submitReset() {
-    const pw  = document.getElementById('reset-pw').value  || '';
-    const pw2 = document.getElementById('reset-pw2').value || '';
-    const msg = document.getElementById('reset-msg');
-    if (pw.length < 4) { msg.innerText = '4자 이상 입력해주세요.'; return; }
-    if (pw !== pw2)    { msg.innerText = '비밀번호가 일치하지 않습니다.'; return; }
-    try {
-        const res  = await fetch('/api/reset-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: resetToken, newPassword: pw })
-        });
-        const data = await res.json();
-        if (data.ok) {
-            closeSubModal('reset-modal');
-            showView('view-login');
-            setLoginMsg('✓ 비밀번호가 변경되었습니다. 다시 로그인해주세요.', 'ok');
-        } else {
-            msg.innerText = data.error || '오류가 발생했습니다.';
-        }
-    } catch { msg.innerText = '서버 오류가 발생했습니다.'; }
+async function submitReset(){
+    const pw=document.getElementById('reset-pw').value||'';
+    const pw2=document.getElementById('reset-pw2').value||'';
+    const msg=document.getElementById('reset-msg');
+    if(pw.length<4){msg.innerText='4자 이상 입력해주세요.';return;}
+    if(pw!==pw2){msg.innerText='비밀번호가 일치하지 않습니다.';return;}
+    try{
+        const res=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:resetToken,newPassword:pw})});
+        const data=await res.json();
+        if(data.ok){closeSubModal('reset-modal');showView('view-login');setLoginMsg('✓ 비밀번호가 변경되었습니다. 다시 로그인해주세요.','ok');}
+        else msg.innerText=data.error||'오류가 발생했습니다.';
+    }catch{msg.innerText='서버 오류가 발생했습니다.';}
 }
 
-// ════════════════════════════
-// 비밀번호 변경 (로그인 상태)
-// ════════════════════════════
-function openChangePwModal() {
-    document.getElementById('change-pw-current-wrap').style.display = myProvider === 'kakao' ? 'none' : 'block';
-    ['change-pw-current', 'change-pw-new', 'change-pw-new2'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('change-pw-msg').innerText = '';
+// ── 비밀번호 변경 ──
+function openChangePwModal(){
+    document.getElementById('change-pw-current-wrap').style.display=myProvider==='kakao'?'none':'block';
+    ['change-pw-current','change-pw-new','change-pw-new2'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('change-pw-msg').innerText='';
     openSubModal('change-pw-modal');
 }
-
-function submitChangePw() {
-    const current = document.getElementById('change-pw-current').value || '';
-    const newPw   = document.getElementById('change-pw-new').value    || '';
-    const newPw2  = document.getElementById('change-pw-new2').value   || '';
-    const msg     = document.getElementById('change-pw-msg');
-    if (newPw.length < 4) { msg.innerText = '새 비밀번호는 4자 이상이어야 합니다.'; return; }
-    if (newPw !== newPw2)  { msg.innerText = '새 비밀번호가 일치하지 않습니다.'; return; }
-    socket.emit('change_password', { currentPw: current, newPw });
+function submitChangePw(){
+    const current=document.getElementById('change-pw-current').value||'';
+    const newPw=document.getElementById('change-pw-new').value||'';
+    const newPw2=document.getElementById('change-pw-new2').value||'';
+    const msg=document.getElementById('change-pw-msg');
+    if(newPw.length<4){msg.innerText='새 비밀번호는 4자 이상이어야 합니다.';return;}
+    if(newPw!==newPw2){msg.innerText='새 비밀번호가 일치하지 않습니다.';return;}
+    socket.emit('change_password',{currentPw:current,newPw});
 }
-
-socket.on('change_password_success', () => {
-    closeSubModal('change-pw-modal');
-    showToast('✅ 비밀번호가 변경되었습니다!');
-    if (myProvider === 'kakao') {
-        myProvider = 'both';
-        document.getElementById('acct-provider').innerText = '아이디/카카오';
-    }
+socket.on('change_password_success',()=>{
+    closeSubModal('change-pw-modal');showToast('✅ 비밀번호가 변경되었습니다!');
+    if(myProvider==='kakao'){myProvider='both';document.getElementById('acct-provider').innerText='아이디/카카오';}
 });
 
-// ════════════════════════════
-// 이메일 등록
-// ════════════════════════════
-function submitEmail() {
-    const email = (document.getElementById('reg-email-modal').value || '').trim();
-    const msg   = document.getElementById('email-msg');
-    if (!email || !email.includes('@')) { msg.className = 'fmsg err'; msg.innerText = '올바른 이메일을 입력해주세요.'; return; }
-    socket.emit('update_email', { email });
+// ── 이메일 등록 ──
+function submitEmail(){
+    const email=(document.getElementById('reg-email-modal').value||'').trim();
+    const msg=document.getElementById('email-msg');
+    if(!email||!email.includes('@')){msg.className='fmsg err';msg.innerText='올바른 이메일을 입력해주세요.';return;}
+    socket.emit('update_email',{email});
 }
-
-socket.on('update_email_success', () => {
-    const email = (document.getElementById('reg-email-modal').value || '').trim();
-    document.getElementById('acct-email').innerText    = email;
-    document.getElementById('acct-email').style.color = '#c8d6f0';
+socket.on('update_email_success',()=>{
+    const email=(document.getElementById('reg-email-modal').value||'').trim();
+    document.getElementById('acct-email').innerText=email;
+    document.getElementById('acct-email').style.color='var(--text-main)';
     showToast('✅ 이메일이 등록되었습니다!');
-    setTimeout(() => closeSubModal('email-modal'), 800);
+    setTimeout(()=>closeSubModal('email-modal'),800);
 });
 
-// ════════════════════════════
-// 탭 전환
-// ════════════════════════════
-function switchTab(name) {
-    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + name).style.display = 'block';
-    document.getElementById('nav-' + name).classList.add('active');
-    if (name === 'my') { renderMyRooms(); socket.emit('request_history'); }
+// ── 탭 ──
+function switchTab(name){
+    document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+    document.getElementById('tab-'+name).style.display='block';
+    document.getElementById('nav-'+name).classList.add('active');
+    if(name==='my'){renderMyRooms();socket.emit('request_history');}
 }
 
-// ════════════════════════════
-// 세부 장소
-// ════════════════════════════
-function updateSpecificSpots() {
-    const origin = document.getElementById('origin-select').value;
-    const sel    = document.getElementById('specific-spot-select');
-    const inp    = document.getElementById('custom-spot-input');
-    sel.innerHTML = '<option value="">-- 세부 장소 선택 (선택) --</option>';
-    (cachedSpecificSpots[origin] || []).forEach(s => {
-        const o = document.createElement('option'); o.value = s; o.innerText = s; sel.appendChild(o);
-    });
-    const co = document.createElement('option'); co.value = 'custom'; co.innerText = '직접 입력'; sel.appendChild(co);
-    inp.style.display = 'none';
+// ── 세부 장소 ──
+function updateSpecificSpots(){
+    const origin=document.getElementById('origin-select').value;
+    const sel=document.getElementById('specific-spot-select');
+    const inp=document.getElementById('custom-spot-input');
+    sel.innerHTML='<option value="">-- 세부 장소 선택 (선택) --</option>';
+    (cachedSpecificSpots[origin]||[]).forEach(s=>{const o=document.createElement('option');o.value=s;o.innerText=s;sel.appendChild(o);});
+    const co=document.createElement('option');co.value='custom';co.innerText='직접 입력';sel.appendChild(co);
+    inp.style.display='none';
+}
+function toggleCustomSpot(){
+    const sel=document.getElementById('specific-spot-select');
+    const inp=document.getElementById('custom-spot-input');
+    inp.style.display=sel.value==='custom'?'block':'none';
+    if(sel.value==='custom')inp.focus();
 }
 
-function toggleCustomSpot() {
-    const sel = document.getElementById('specific-spot-select');
-    const inp = document.getElementById('custom-spot-input');
-    inp.style.display = sel.value === 'custom' ? 'block' : 'none';
-    if (sel.value === 'custom') inp.focus();
-}
-
-// ════════════════════════════
-// 검색
-// ════════════════════════════
-function searchPool() {
-    const origin = document.getElementById('search-origin').value;
-    const dest   = document.getElementById('search-dest').value;
-    const date   = document.getElementById('search-date').value;
-    isSearchMode = !!(origin || dest || date);
-    if (isSearchMode) socket.emit('search_rooms', { origin, dest, date });
+// ── 검색 ──
+function searchPool(){
+    const origin=document.getElementById('search-origin').value;
+    const dest=document.getElementById('search-dest').value;
+    const date=document.getElementById('search-date').value;
+    isSearchMode=!!(origin||dest||date);
+    if(isSearchMode)socket.emit('search_rooms',{origin,dest,date});
     else socket.emit('request_init_rooms');
 }
-
-// ✅ FIX: resetSearch 후 searchPool 호출해 날짜 필터 잔존 방지
-function resetSearch() {
-    isSearchMode = false;
-    document.getElementById('search-origin').value = '';
-    document.getElementById('search-dest').value   = '';
-    const ds = document.getElementById('search-date');
-    if (ds.options.length > 1) ds.selectedIndex = 1; // 오늘
+function resetSearch(){
+    isSearchMode=false;
+    document.getElementById('search-origin').value='';
+    document.getElementById('search-dest').value='';
+    const ds=document.getElementById('search-date');
+    if(ds.options.length>1)ds.selectedIndex=1;
     socket.emit('request_init_rooms');
-    document.getElementById('list-title').innerText = '실시간 카풀 목록';
+    document.getElementById('list-title').innerText='실시간 카풀 목록';
 }
-
-socket.on('update_rooms', data => {
-    allRoomsData = data.rooms || [];
-    if (!isSearchMode) renderRooms(allRoomsData, data.searchCriteria, 'room-list');
-    if (document.getElementById('tab-my')?.style.display === 'block') renderMyRooms();
+socket.on('update_rooms',data=>{
+    allRoomsData=data.rooms||[];
+    if(!isSearchMode)renderRooms(allRoomsData,data.searchCriteria,'room-list');
+    if(document.getElementById('tab-my')?.style.display==='block')renderMyRooms();
 });
+socket.on('search_result',data=>{isSearchMode=true;renderRooms(data.rooms||[],data.searchCriteria,'room-list');});
 
-socket.on('search_result', data => {
-    isSearchMode = true;
-    renderRooms(data.rooms || [], data.searchCriteria, 'room-list');
-});
-
-// ════════════════════════════
-// 방 CRUD
-// ════════════════════════════
-function createRoom() {
-    const origin   = document.getElementById('origin-select').value;
-    const dest     = document.getElementById('dest-select').value;
-    const date     = document.getElementById('date-input').value;
-    const time     = document.getElementById('time-input').value;
-    const maxPax   = document.getElementById('max-pax-select').value;
-    const spotSel  = document.getElementById('specific-spot-select');
-    const customI  = document.getElementById('custom-spot-input');
-    const specificLocation = spotSel.value === 'custom' ? customI.value.trim() : spotSel.value;
-
-    if (!origin)           return showToast('⚠️ 출발지를 선택해주세요.');
-    if (!dest)             return showToast('⚠️ 목적지를 선택해주세요.');
-    if (!date)             return showToast('⚠️ 날짜를 입력해주세요.');
-    if (!time)             return showToast('⚠️ 시간을 입력해주세요.');
-    if (origin === dest)   return showToast('⚠️ 출발지와 목적지가 같습니다!');
-    if (date < new Date().toISOString().split('T')[0]) return showToast('⚠️ 오늘 이후 날짜만 선택할 수 있습니다.');
-
-    socket.emit('create_room', { origin, dest, date, time, specificLocation, maxPax: parseInt(maxPax) });
+// ── 방 CRUD ──
+function createRoom(){
+    const origin=document.getElementById('origin-select').value;
+    const dest=document.getElementById('dest-select').value;
+    const date=document.getElementById('date-input').value;
+    const time=document.getElementById('time-input').value;
+    const maxPax=document.getElementById('max-pax-select').value;
+    const spotSel=document.getElementById('specific-spot-select');
+    const customI=document.getElementById('custom-spot-input');
+    const specificLocation=spotSel.value==='custom'?customI.value.trim():spotSel.value;
+    if(!origin) return showToast('⚠️ 출발지를 선택해주세요.');
+    if(!dest) return showToast('⚠️ 목적지를 선택해주세요.');
+    if(!date) return showToast('⚠️ 날짜를 입력해주세요.');
+    if(!time) return showToast('⚠️ 시간을 입력해주세요.');
+    if(origin===dest) return showToast('⚠️ 출발지와 목적지가 같습니다!');
+    if(date<new Date().toISOString().split('T')[0]) return showToast('⚠️ 오늘 이후 날짜만 선택할 수 있습니다.');
+    socket.emit('create_room',{origin,dest,date,time,specificLocation,maxPax:parseInt(maxPax)});
     closeModal('create-modal');
 }
-
-function joinRoom(id) {
-    if (confirm('참여하시겠습니까?')) socket.emit('join_room', id);
+function joinRoom(id){if(confirm('참여하시겠습니까?'))socket.emit('join_room',id);}
+function cancelJoin(roomId,isCreator){
+    const msg=isCreator?'방장이 취소하면 방 전체가 삭제됩니다. 정말 취소하시겠습니까?':'참여를 취소하시겠습니까?';
+    if(confirm(msg))socket.emit('cancel_join',{roomId});
 }
-
-// ✅ FIX: 방장 취소 시 경고 문구 추가
-function cancelJoin(roomId, isCreator) {
-    const msg = isCreator
-        ? '방장이 취소하면 방 전체가 삭제됩니다. 정말 취소하시겠습니까?'
-        : '참여를 취소하시겠습니까?';
-    if (confirm(msg)) socket.emit('cancel_join', { roomId });
+function submitPayment(){
+    const amount=document.getElementById('pay-amount').value||'';
+    const bank=document.getElementById('pay-bank').value;
+    const account=(document.getElementById('pay-account').value||'').trim();
+    if(!amount||!account) return showToast('⚠️ 금액과 계좌번호를 입력하세요.');
+    const safe=parseInt(amount);
+    if(isNaN(safe)||safe<=0||safe>10_000_000) return showToast('⚠️ 올바른 금액을 입력해주세요.');
+    socket.emit('submit_payment',{roomId:currentRoomIdForPay,amount:safe,bank,account});
+    closeModal('payment-modal');showToast('💰 정산 정보가 등록되었습니다.');
 }
-
-function submitPayment() {
-    const amount  =  document.getElementById('pay-amount').value;
-    const bank    =  document.getElementById('pay-bank').value;
-    const account = (document.getElementById('pay-account').value || '').trim();
-    if (!amount || !account) return showToast('⚠️ 금액과 계좌번호를 입력하세요.');
-    const safe = parseInt(amount);
-    if (isNaN(safe) || safe <= 0 || safe > 10000000) return showToast('⚠️ 올바른 금액을 입력해주세요.');
-    socket.emit('submit_payment', { roomId: currentRoomIdForPay, amount: safe, bank, account });
-    closeModal('payment-modal');
-    showToast('💰 정산 정보가 등록되었습니다.');
+socket.on('payment_registered',()=>showToast('💰 정산 정보가 등록되었습니다.'));
+function completePayment(id){if(confirm('정산 완료 후 방을 삭제할까요?'))socket.emit('complete_payment',{roomId:id});}
+function copyAccount(acc){
+    if(navigator.clipboard)navigator.clipboard.writeText(acc).then(()=>showToast('📋 계좌번호 복사됨: '+acc)).catch(()=>_legacyCopy(acc));
+    else _legacyCopy(acc);
 }
-
-// ✅ FIX: 서버에서 payment_registered emit 시 토스트 표시 (server.js 수정 필요)
-socket.on('payment_registered', () => showToast('💰 정산 정보가 등록되었습니다.'));
-
-function completePayment(id) {
-    if (confirm('정산 완료 후 방을 삭제할까요?')) socket.emit('complete_payment', { roomId: id });
-}
-
-function copyAccount(acc) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(acc)
-            .then(() => showToast('📋 계좌번호 복사됨: ' + acc))
-            .catch(() => _legacyCopy(acc));
-    } else { _legacyCopy(acc); }
-}
-
-function _legacyCopy(text) {
-    const ta = Object.assign(document.createElement('textarea'), { value: text });
-    ta.style.cssText = 'position:fixed;left:-9999px;opacity:0';
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try { document.execCommand('copy'); showToast('📋 계좌번호 복사됨: ' + text); } catch { showToast(text); }
+function _legacyCopy(text){
+    const ta=Object.assign(document.createElement('textarea'),{value:text});
+    ta.style.cssText='position:fixed;left:-9999px;opacity:0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    try{document.execCommand('copy');showToast('📋 계좌번호 복사됨: '+text);}catch{showToast(text);}
     document.body.removeChild(ta);
 }
-
-function openToss(bank, account) {
-    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        location.href = `supertoss://send?bank=${encodeURIComponent(bank)}&account=${encodeURIComponent(account)}`;
-        setTimeout(() => {
-            if (confirm('토스 앱으로 이동하지 못했습니다. 앱이 설치되어 있나요?')) location.href = 'https://toss.im';
-        }, 1500);
-    } else { showToast('⚠️ 토스 송금은 모바일 환경에서만 지원됩니다.'); }
+function openToss(bank,account){
+    if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)){
+        location.href=`supertoss://send?bank=${encodeURIComponent(bank)}&account=${encodeURIComponent(account)}`;
+        setTimeout(()=>{if(confirm('토스 앱으로 이동하지 못했습니다. 앱이 설치되어 있나요?'))location.href='https://toss.im';},1500);
+    }else showToast('⚠️ 토스 송금은 모바일 환경에서만 지원됩니다.');
+}
+function shareApp(){
+    const text='[KATCHI-TAPSIDA] 험프리스 카투사 카풀 서비스';
+    if(navigator.share)navigator.share({title:'KATCHI-TAPSIDA',text,url:location.origin}).catch(()=>{});
+    else if(navigator.clipboard)navigator.clipboard.writeText(text+'\n'+location.origin).then(()=>showToast('📋 주소가 복사되었습니다!'));
+    else _legacyCopy(text+'\n'+location.origin);
 }
 
-function shareApp() {
-    const text = '[KATCHI-TAPSIDA] 험프리스 카투사 카풀 서비스';
-    if (navigator.share) {
-        navigator.share({ title: 'KATCHI-TAPSIDA', text, url: location.origin }).catch(() => {});
-    } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(text + '\n' + location.origin).then(() => showToast('📋 주소가 복사되었습니다!'));
-    } else {
-        _legacyCopy(text + '\n' + location.origin);
-    }
-}
-
-// ════════════════════════════
-// 히스토리
-// ════════════════════════════
-socket.on('history_updated', () => socket.emit('request_history'));
-
-socket.on('history_data', (history) => {
-    const div = document.getElementById('history-list');
-    if (!history?.length) {
-        div.innerHTML = '<div style="text-align:center;padding:20px;color:#5a6680;font-size:13px;">이용 기록이 없습니다.</div>';
-        return;
-    }
-    div.innerHTML = history.map(it => `
-        <div class="card" style="padding:14px;margin-bottom:10px;border-left:4px solid ${it.isPayer ? 'var(--accent)' : '#4a5568'};">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                <span style="font-size:11px;color:#5a6680;">${it.date} ${it.time}</span>
-                <span class="my-badge" style="background:${it.isPayer ? 'var(--accent)' : '#4a5568'}">${it.isPayer ? '결제자' : '탑승객'}</span>
+// ── 히스토리 ──
+socket.on('history_updated',()=>socket.emit('request_history'));
+socket.on('history_data',history=>{
+    const div=document.getElementById('history-list');
+    if(!history?.length){div.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">이용 기록이 없습니다.</div>';return;}
+    div.innerHTML=history.map(it=>`
+        <div class="card" style="padding:14px;margin-bottom:8px;border-left:3px solid ${it.isPayer?'var(--primary)':'var(--border-med)'};">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                <span style="font-size:11px;color:var(--text-muted);">${it.date} ${it.time}</span>
+                <span class="my-badge" style="${it.isPayer?'':'border-color:var(--border-med);color:var(--text-muted);background:transparent;'}">${it.isPayer?'결제자':'탑승객'}</span>
             </div>
-            <div style="font-size:14px;font-weight:700;color:#c8d6f0;margin-bottom:4px;">${it.origin} ➔ ${it.dest}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-main);margin-bottom:4px;">${it.origin} → ${it.dest}</div>
             <div style="display:flex;justify-content:space-between;font-size:12px;">
-                <span style="color:#5a6680;">총 ${it.pax}명</span>
-                <span style="color:#7aaae8;font-weight:700;">본인부담 ${it.splitAmount.toLocaleString()}원</span>
+                <span style="color:var(--text-muted);">총 ${it.pax}명</span>
+                <span style="color:var(--primary);font-weight:700;">본인부담 ${it.splitAmount.toLocaleString()}원</span>
             </div>
         </div>`).join('');
 });
 
-// ════════════════════════════
-// 렌더링
-// ════════════════════════════
-function maskName(name) {
-    if (!name || name === '?') return '???';
-    const n = name.trim();
-    if (n.length === 1) return n + '*';
-    if (n.length === 2) return n[0] + '*';
-    return n[0] + '*'.repeat(n.length - 2) + n[n.length - 1];
+// ── 렌더링 ──
+function maskName(name){
+    if(!name||name==='?') return '???';
+    const n=name.trim();
+    if(n.length===1) return n+'*';
+    if(n.length===2) return n[0]+'*';
+    return n[0]+'*'.repeat(n.length-2)+n[n.length-1];
+}
+function renderMyRooms(){
+    const mine=allRoomsData.filter(r=>(r.participantList||'').split(',').includes(myId));
+    renderRooms(mine,null,'my-room-list');
 }
 
-function renderMyRooms() {
-    const mine = allRoomsData.filter(r => (r.participantList || '').split(',').includes(myId));
-    renderRooms(mine, null, 'my-room-list');
-}
+function renderRooms(rooms,searchCriteria,targetId){
+    const div=document.getElementById(targetId);if(!div)return;
 
-function renderRooms(rooms, searchCriteria, targetId) {
-    const div = document.getElementById(targetId);
-    if (!div) return;
+    const kstNow=new Date(Date.now()+9*3_600_000);
+    const curD=kstNow.toISOString().split('T')[0];
+    const curT=kstNow.toISOString().split('T')[1].substring(0,5);
+    const cutoff=new Date(kstNow.getTime()-3*3_600_000);
+    const cutD=cutoff.toISOString().split('T')[0];
+    const cutT=cutoff.toISOString().split('T')[1].substring(0,5);
 
-    const kstNow  = new Date(Date.now() + 9 * 3_600_000);
-    const curD    = kstNow.toISOString().split('T')[0];
-    const curT    = kstNow.toISOString().split('T')[1].substring(0, 5);
-    // 3시간 전 기준 (서버 broadcastRooms 와 동일)
-    const cutoff  = new Date(kstNow.getTime() - 3 * 3_600_000);
-    const cutD    = cutoff.toISOString().split('T')[0];
-    const cutT    = cutoff.toISOString().split('T')[1].substring(0, 5);
-
-    if (searchCriteria && targetId === 'room-list') {
-        currentSearchCriteria = searchCriteria;
-        const o  = searchCriteria.origin || '전체';
-        const d  = searchCriteria.dest   || '전체';
-        const dt = searchCriteria.date   || '전체날짜';
-        document.getElementById('list-title').innerHTML =
-            `🔍 <span style="color:var(--accent)">${o} → ${d}</span> <small style="color:#5a6680;margin-left:4px;">(${dt})</small>`;
-    } else if (!isSearchMode && targetId === 'room-list') {
-        document.getElementById('list-title').innerText = '실시간 카풀 목록';
+    if(searchCriteria&&targetId==='room-list'){
+        currentSearchCriteria=searchCriteria;
+        const o=searchCriteria.origin||'전체',d=searchCriteria.dest||'전체',dt=searchCriteria.date||'전체날짜';
+        document.getElementById('list-title').innerHTML=
+            `검색 결과 — <span style="color:var(--primary)">${o} → ${d}</span> <span style="color:var(--text-muted);font-size:10px;">(${dt})</span>`;
+    }else if(!isSearchMode&&targetId==='room-list'){
+        document.getElementById('list-title').innerText='실시간 카풀 목록';
     }
 
-    // 클라이언트 사이드 3시간 필터 (서버와 동기화 전 잔상 제거)
-    const visibleRooms = rooms.filter(room => {
-        const isJoined = (room.participantList || '').split(',').includes(myId);
-        // 참여자는 정산을 위해 항상 표시
-        if (isJoined) return true;
-        // 비참여자: 3시간 지난 방은 숨김
-        if (room.date < cutD) return false;
-        if (room.date === cutD && room.time < cutT) return false;
+    // 3시간 클라이언트 필터
+    const visible=rooms.filter(room=>{
+        const joined=(room.participantList||'').split(',').includes(myId);
+        if(joined)return true;
+        if(room.date<cutD)return false;
+        if(room.date===cutD&&room.time<cutT)return false;
         return true;
     });
 
-    if (!visibleRooms.length) {
-        div.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:#5a6680;">${targetId === 'my-room-list' ? '참여 중인 카풀이 없습니다.' : '등록된 카풀이 없습니다.'}</div>`;
+    if(!visible.length){
+        div.innerHTML=`<div class="card" style="text-align:center;padding:36px;color:var(--text-muted);">${targetId==='my-room-list'?'참여 중인 카풀이 없습니다.':'등록된 카풀이 없습니다.'}</div>`;
         return;
     }
 
-    let html = '', lastDate = '';
+    let html='',lastDate='';
 
-    visibleRooms.forEach(room => {
-        const ps        = (room.participantList || '').split(',');
-        const isJoined  = ps.includes(myId);
-        const isCreator = room.creatorId === myId;
-        // isPast: 출발 시간이 현재보다 이전 (분 단위)
-        const isPast    = room.date < curD || (room.date === curD && room.time < curT);
-        const remaining = room.maxPax - room.currentPax;
-        const isFull    = remaining <= 0;
+    visible.forEach(room=>{
+        const ps=(room.participantList||'').split(',');
+        const isJoined=ps.includes(myId);
+        const isCreator=room.creatorId===myId;
+        const isPast=room.date<curD||(room.date===curD&&room.time<curT);
+        const remaining=room.maxPax-room.currentPax;
+        const isFull=remaining<=0;
+        const cardStyle=(isPast&&!isJoined)?'opacity:0.5;':'';
 
-        const nearO   = isSearchMode && currentSearchCriteria.origin && room.origin !== currentSearchCriteria.origin;
-        const nearD   = isSearchMode && currentSearchCriteria.dest   && room.dest   !== currentSearchCriteria.dest;
-        const origTxt = room.origin + (nearO ? ' <small style="color:var(--accent);font-weight:bold;">(인근)</small>' : '');
-        const destTxt = room.dest   + (nearD ? ' <small style="color:var(--accent);font-weight:bold;">(인근)</small>' : '');
-        const specTxt = room.specificLocation ? `<br><small style="color:#7aaae8;font-size:11px;">📍 ${room.specificLocation}</small>` : '';
+        const nearO=isSearchMode&&currentSearchCriteria.origin&&room.origin!==currentSearchCriteria.origin;
+        const nearD=isSearchMode&&currentSearchCriteria.dest&&room.dest!==currentSearchCriteria.dest;
+        const nearTag=`<span style="font-size:9px;color:var(--accent);font-weight:700;margin-left:3px;padding:1px 4px;background:var(--accent-dim);border-radius:3px;">인근</span>`;
 
-        let paxClass = 'pax-safe', statusText = `${remaining}자리 남음`;
-        if (isFull)             { paxClass = 'pax-full';    statusText = '마감'; }
-        else if (remaining === 1) { paxClass = 'pax-warning'; statusText = '마지막 1자리!'; }
+        let paxClass='pax-safe',statusText=`${remaining}자리 남음`;
+        if(isFull){paxClass='pax-full';statusText='마감';}
+        else if(remaining===1){paxClass='pax-warning';statusText='마지막 1자리!';}
 
-        if (room.date !== lastDate) {
-            html += `<div class="section-title" style="margin-top:20px;margin-bottom:10px;font-size:13px;">📅 ${room.date}</div>`;
-            lastDate = room.date;
+        if(room.date!==lastDate){
+            html+=`<div class="date-divider">📅 ${room.date}</div>`;
+            lastDate=room.date;
         }
 
-        // 참여자 명단 (참여자에게만)
-        let memberSection = '';
-        if (isJoined && room.participantList) {
-            const ids   = room.participantList.split(',');
-            const names = (room.participantNames || '').split(',');
-            const members = ids.map((uid, i) => {
-                const isCr  = uid === room.creatorId;
-                const isMe  = uid === myId;
-                const masked = maskName(names[i] || '?');
-                return `<span style="display:inline-flex;align-items:center;gap:4px;background:${isMe ? 'rgba(74,127,203,0.2)' : 'rgba(255,255,255,0.05)'};border:1px solid ${isMe ? 'rgba(74,127,203,0.4)' : 'rgba(255,255,255,0.08)'};border-radius:6px;padding:3px 8px;font-size:11px;color:#c8d6f0;">
-                    ${masked}
-                    ${isCr ? '<span style="font-size:9px;background:var(--accent);color:#1a1f2e;border-radius:3px;padding:1px 4px;font-weight:800;">방장</span>' : ''}
-                    ${isMe ? '<span style="font-size:9px;color:#7aaae8;">(나)</span>' : ''}
+        // 멤버
+        let memberSection='';
+        if(isJoined&&room.participantList){
+            const ids=room.participantList.split(',');
+            const names=(room.participantNames||'').split(',');
+            const chips=ids.map((uid,i)=>{
+                const isCr=uid===room.creatorId,isMe=uid===myId;
+                return `<span class="member-chip ${isMe?'me':''}">
+                    ${maskName(names[i]||'?')}
+                    ${isCr?'<span class="chip-label">방장</span>':''}
+                    ${isMe&&!isCr?'<span style="font-size:9px;opacity:0.6;">(나)</span>':''}
                 </span>`;
             }).join('');
-            memberSection = `
-            <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05);">
-                <div style="font-size:10px;color:#5a6680;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">탑승 멤버</div>
-                <div style="display:flex;flex-wrap:wrap;gap:5px;">${members}</div>
+            memberSection=`<div class="member-section"><div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">멤버</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div></div>`;
+        }
+
+        // 정산
+        let paySection='';
+        if(room.payAmount>0&&isJoined){
+            const split=Math.floor(parseInt(room.payAmount)/(parseInt(room.currentPax)||1));
+            const isPayer=room.payerId===myId;
+            const actionBtns=!isPayer?`
+                <button class="btn-join toss-btn" data-account="${room.payAccount}"
+                    style="flex:1;height:34px;font-size:11px;background:var(--bg-sub);color:var(--text-main);border:1px solid var(--border-med);">
+                    <i class="fas fa-copy"></i> 계좌복사
+                </button>
+                <button class="btn-join" onclick="openToss('${room.payBank}','${room.payAccount}')"
+                    style="flex:1;height:34px;font-size:11px;background:#0064ff;">
+                    <i class="fas fa-paper-plane"></i> 토스
+                </button>`:`
+                <button class="btn-join" onclick="completePayment(${room.id})"
+                    style="flex:1;height:34px;font-size:11px;">✓ 입금완료 → 방 폭파</button>`;
+            paySection=`
+            <div class="pay-box">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                    <span style="font-size:12px;color:var(--text-sub);">${isPayer?'회수할 금액':'송금할 금액'}</span>
+                    <span class="pay-amount">${split.toLocaleString()}원</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
+                    <span style="color:var(--primary);font-weight:700;">${room.payerId}</span> · ${room.payBank}
+                    <code style="background:var(--bg-sub);padding:1px 6px;border-radius:4px;color:var(--text-main);margin-left:4px;">${room.payAccount}</code>
+                </div>
+                <div style="display:flex;gap:6px;">${actionBtns}</div>
             </div>`;
         }
 
-        // 정산 섹션
-        let paySection = '';
-        if (room.payAmount > 0 && isJoined) {
-            const split   = Math.floor(parseInt(room.payAmount) / (parseInt(room.currentPax) || 1));
-            const isPayer = room.payerId === myId;
-            paySection = `
-            <div style="margin-top:12px;padding:12px;background:rgba(122,170,232,0.08);border-radius:8px;border-left:3px solid var(--accent);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <strong style="color:#c8d6f0;font-size:13px;">💰 ${isPayer ? '회수할 금액' : '송금할 금액'}</strong>
-                    <span style="color:var(--accent);font-weight:800;font-size:16px;">${split.toLocaleString()}원</span>
-                </div>
-                <div style="font-size:11px;color:#5a6680;margin-bottom:10px;">
-                    <span style="color:#7aaae8;font-weight:700;">${room.payerId}</span> · ${room.payBank}
-                    <code style="background:#131826;padding:2px 6px;border-radius:4px;color:#eee;margin-left:4px;">${room.payAccount}</code>
-                </div>
-                <div style="display:flex;gap:6px;">
-                ${!isPayer ? `
-                    <button class="toss-btn" data-account="${room.payAccount}"
-                        style="flex:1;height:38px;font-size:11px;background:#1e2d40;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#c8d6f0;cursor:pointer;">
-                        <i class="fas fa-copy"></i> 계좌복사
-                    </button>
-                    <button onclick="openToss('${room.payBank}','${room.payAccount}')"
-                        style="flex:1;height:38px;font-size:11px;background:#0064ff;color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer;">
-                        <i class="fas fa-paper-plane"></i> 토스송금
-                    </button>
-                ` : `
-                    <button onclick="completePayment(${room.id})"
-                        style="flex:1;height:40px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;">
-                        ✓ 입금 완료 → 방 폭파
-                    </button>
-                `}
-                </div>
-            </div>`;
-        }
+        // 버튼
+        const joinedBtns=`
+            <button class="btn-join" onclick="currentRoomIdForPay=${room.id};openModal('payment-modal')"
+                style="width:100%;height:34px;font-size:11px;${isPast?'background:var(--warn);':''}">
+                ${isPast?'💰 정산':'결제등록'}
+            </button>
+            <button class="btn-join"
+                ${isPast?'disabled':`onclick="cancelJoin(${room.id},${isCreator})"`}
+                style="width:100%;height:34px;font-size:11px;margin-top:4px;
+                    background:${isPast?'var(--bg-sub)':isCreator?'var(--danger)':'var(--bg-sub)'};
+                    color:${isPast?'var(--text-muted)':isCreator?'#fff':'var(--text-sub)'};
+                    border:1px solid ${isPast||!isCreator?'var(--border-med)':'transparent'};
+                    cursor:${isPast?'not-allowed':'pointer'};">
+                ${isPast?'⛔ 나가기 불가':isCreator?'⚠️ 방 삭제':'취소'}
+            </button>`;
 
-        // ✅ FIX: 참여자는 정산을 위해 항상 선명하게 표시
-        //         비참여자 + 시간 지난 방만 흐리게
-        const cardOpacity = (isPast && !isJoined) ? 'opacity:0.45;' : '';
+        const notJoinedBtn=`
+            <button class="btn-join" onclick="joinRoom(${room.id})"
+                ${isFull||isPast?'disabled':''}
+                style="width:100%;height:46px;font-size:13px;${isFull||isPast?'opacity:0.3;cursor:not-allowed;background:var(--bg-sub);color:var(--text-muted);':''}">
+                ${isPast?'종료':isFull?'만차':'합승'}
+            </button>`;
 
-        // ✅ FIX: cancelJoin에 isCreator 전달
-        html += `
-        <div class="card ${isJoined ? 'my-room' : ''}" style="${cardOpacity}padding:16px 18px;margin-bottom:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.04);">
-                <span style="font-size:10px;color:#5a6680;font-family:monospace;">#${String(room.id).padStart(3, '0')} ${isPast ? '(종료)' : ''}</span>
-                <span style="font-size:11px;color:var(--accent);font-weight:800;">${room.roomName || '...'}</span>
+        html+=`
+        <div class="card ${isJoined?'my-room':''}" style="${cardStyle}margin-bottom:8px;">
+            <div class="room-card-top">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="room-time">${room.time}</span>
+                    ${isJoined?'<span class="my-badge">참여중</span>':''}
+                    ${isPast?'<span style="font-size:10px;color:var(--text-muted);">(종료)</span>':''}
+                </div>
+                <span class="room-name-tag">${room.roomName||'...'}</span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div style="flex:1;min-width:0;padding-right:10px;">
-                    <div class="room-time" style="font-size:18px;margin-bottom:6px;">
-                        ${room.time}
-                        ${isJoined ? '<span class="my-badge" style="font-size:9px;vertical-align:middle;margin-left:5px;">참여중</span>' : ''}
-                    </div>
-                    <div style="font-size:13px;color:#b0bdd0;line-height:1.5;">${origTxt} ➔ ${destTxt}${specTxt}</div>
-                    <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                <div style="flex:1;min-width:0;">
+                    <div class="room-route">${room.origin}${nearO?nearTag:''} → ${room.dest}${nearD?nearTag:''}</div>
+                    ${room.specificLocation?`<div class="room-spot">📍 ${room.specificLocation}</div>`:''}
+                    <div style="margin-top:6px;display:flex;align-items:center;gap:5px;">
                         <span class="pax-badge ${paxClass}">${room.currentPax}/${room.maxPax}</span>
-                        <span style="font-size:11px;font-weight:700;color:${isFull ? '#ff4d4d' : '#7aaae8'};">${statusText}</span>
+                        <span style="font-size:11px;color:${isFull?'var(--danger)':'var(--text-muted)'};">${statusText}</span>
                     </div>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:6px;min-width:80px;">
-                ${isJoined ? `
-                    <button class="btn-join" onclick="currentRoomIdForPay=${room.id};openModal('payment-modal')"
-                        style="width:100%;height:36px;font-size:11px;background:linear-gradient(135deg,#2e7d52,#1e5c3a);">
-                        ${isPast ? '💰 정산하기' : '결제등록'}
-                    </button>
-                    <button class="btn-join"
-                        ${isPast ? 'disabled' : `onclick="cancelJoin(${room.id}, ${isCreator})"`}
-                        style="width:100%;height:36px;font-size:11px;
-                            background:${isPast ? '#2a2f3e' : (isCreator ? '#7c2d2d' : '#374151')};
-                            color:${isPast ? '#4a5568' : '#fff'};
-                            cursor:${isPast ? 'not-allowed' : 'pointer'};">
-                        ${isPast ? '⛔ 나가기 불가' : (isCreator ? '⚠️방 삭제' : '취소')}
-                    </button>
-                ` : `
-                    <button class="btn-join" onclick="joinRoom(${room.id})"
-                        ${isFull || isPast ? 'disabled' : ''}
-                        style="width:100%;height:50px;font-size:13px;${isFull || isPast ? 'opacity:0.3;cursor:not-allowed;' : ''}"
-                    >${isPast ? '종료' : isFull ? '만차' : '합승'}</button>
-                `}
+                <div style="display:flex;flex-direction:column;min-width:74px;">
+                    ${isJoined?joinedBtns:notJoinedBtn}
                 </div>
             </div>
             ${memberSection}
@@ -1624,23 +1120,19 @@ function renderRooms(rooms, searchCriteria, targetId) {
         </div>`;
     });
 
-    div.innerHTML = html;
+    div.innerHTML=html;
 }
 
-// ── 자동 갱신 (1분) ──
-setInterval(() => { if (myId && !isSearchMode) socket.emit('request_init_rooms'); }, 60000);
+// ── 자동 갱신 ──
+setInterval(()=>{if(myId&&!isSearchMode)socket.emit('request_init_rooms');},60000);
 
-// ── 소켓 재연결 시 세션 재인증 ──
-socket.on('connect', () => {
-    if (myId && mySessionId) {
-        socket.emit('session_login', { sessionId: mySessionId });
-    }
-});
+// ── 소켓 재연결 ──
+socket.on('connect',()=>{if(myId&&mySessionId)socket.emit('session_login',{sessionId:mySessionId});});
 
 // ── 계좌 복사 이벤트 위임 ──
-document.addEventListener('click', e => {
-    const btn = e.target.closest('.toss-btn[data-account]');
-    if (btn) copyAccount(btn.dataset.account);
+document.addEventListener('click',e=>{
+    const btn=e.target.closest('.toss-btn[data-account]');
+    if(btn)copyAccount(btn.dataset.account);
 });
 </script>
 </body>
