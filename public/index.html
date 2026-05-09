@@ -16,17 +16,10 @@
     <style>
     /* ════════════════════════════════════════
        AUTH 화면 전용 스타일
-       — style.css 의 body padding/bg 를 덮어씀
     ════════════════════════════════════════ */
-
-    /* 뷰 전환 기반
-       — auth 뷰: position:fixed 오버레이로 메인 위를 덮음
-       — main 뷰: 별도 fixed 오버레이, 로그인 전엔 완전히 숨김
-    */
     .view { display: none !important; }
     .view.active { display: block !important; }
 
-    /* 메인 앱 뷰: fullscreen, 로그인 전엔 완전 숨김 */
     #view-main {
         position: fixed !important;
         inset: 0 !important;
@@ -35,7 +28,6 @@
         background: var(--bg-main) !important;
         z-index: 10 !important;
     }
-    /* 메인앱 컨테이너 여백 */
     #view-main .container {
         padding-left: 18px !important;
         padding-right: 18px !important;
@@ -43,22 +35,15 @@
     }
     #view-main.active { display: block !important; }
 
-    /* auth 뷰들은 메인 위를 완전히 덮음 */
     #view-login .auth-screen,
     #view-register .auth-screen,
     #view-kakao-register .auth-screen {
         z-index: 3000 !important;
     }
 
-    /* sticky header가 .view display:none 뚫고 나오는 것 방지 */
-    #view-main:not(.active) .kitsch-header {
-        display: none !important;
-    }
-    #view-main:not(.active) .bottom-nav {
-        display: none !important;
-    }
+    #view-main:not(.active) .kitsch-header { display: none !important; }
+    #view-main:not(.active) .bottom-nav   { display: none !important; }
 
-    /* 인증 화면: body 위에 fullscreen 덮개 */
     .auth-screen {
         position: fixed;
         inset: 0;
@@ -74,7 +59,6 @@
         padding-bottom: calc(48px + env(safe-area-inset-bottom));
     }
 
-    /* 인증 카드 */
     .auth-card {
         width: 100%;
         max-width: 390px;
@@ -85,19 +69,10 @@
         box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
 
-    /* 로고 */
     .auth-logo-wrap { text-align: center; margin-bottom: 20px; }
-    .auth-logo-wrap .kitsch-logo {
-        font-size: 1.6rem;
-        margin-bottom: 6px;
-    }
-    .auth-tagline {
-        font-size: 12px;
-        color: #5a6680;
-        line-height: 1.5;
-    }
+    .auth-logo-wrap .kitsch-logo { font-size: 1.6rem; margin-bottom: 6px; }
+    .auth-tagline { font-size: 12px; color: #5a6680; line-height: 1.5; }
 
-    /* auth 전용 label — style.css label 덮어쓰기 */
     .auth-card label {
         display: block;
         font-size: 10px;
@@ -110,13 +85,12 @@
     }
     .auth-card label:first-of-type { margin-top: 0; }
 
-    /* auth 전용 input — style.css 의 height:50px 덮어쓰기 */
     .auth-card input {
         width: 100%;
         height: 48px !important;
         padding: 0 14px !important;
-        margin-bottom: 0 !important;    /* label-input 간격은 label margin-top 으로 제어 */
-        font-size: 16px !important;     /* iOS 줌 방지: 반드시 16px 이상 */
+        margin-bottom: 0 !important;
+        font-size: 16px !important;
         background: #131826 !important;
         border: 1px solid rgba(255,255,255,0.07) !important;
         border-radius: 8px !important;
@@ -131,9 +105,8 @@
         box-shadow: 0 0 0 3px rgba(59,111,196,0.18) !important;
     }
     .auth-card input::placeholder { color: #3a4558; }
-    .auth-card input[readonly] { opacity: 0.45; cursor: default; }
+    .auth-card input[readonly]    { opacity: 0.45; cursor: default; }
 
-    /* 아이디 중복확인 행 */
     .id-row { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
     .id-row input { flex: 1; margin-top: 0 !important; }
     .btn-check {
@@ -154,7 +127,6 @@
     }
     .btn-check:active { background: #274060; }
 
-    /* 필드 메시지 */
     .fmsg {
         font-size: 11px;
         min-height: 15px;
@@ -165,7 +137,6 @@
     .fmsg.err { color: #ff6b6b; }
     .fmsg.inf { color: #7aaae8; }
 
-    /* auth 전용 btn-primary — style.css 덮어쓰기 */
     .auth-card .btn-primary,
     .auth-btn {
         display: block !important;
@@ -186,9 +157,9 @@
     }
     .auth-card .btn-primary:active,
     .auth-btn:active { filter: brightness(0.88); }
-    .auth-card .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .auth-card .btn-primary:disabled,
+    .auth-btn:disabled { opacity: 0.4; cursor: not-allowed !important; }
 
-    /* 카카오 버튼 */
     .btn-kakao {
         display: flex !important;
         align-items: center;
@@ -212,7 +183,6 @@
     .btn-kakao:active { filter: brightness(0.88); }
     .btn-kakao svg { width: 20px; height: 20px; flex-shrink: 0; }
 
-    /* 구분선 */
     .auth-divider {
         display: flex; align-items: center; gap: 10px;
         margin: 22px 0 0;
@@ -223,7 +193,6 @@
         background: rgba(255,255,255,0.06);
     }
 
-    /* 링크 버튼 */
     .link-btn {
         background: none; border: none;
         color: #4a7fcb; font-size: 13px;
@@ -233,7 +202,6 @@
     }
     .link-btn:active { color: #7aaae8; }
 
-    /* 하단 안내 줄 */
     .auth-footer-row {
         display: flex; align-items: center; justify-content: center;
         flex-wrap: wrap; gap: 4px;
@@ -242,7 +210,6 @@
     }
     .auth-sep { color: #3a4558; margin: 0 4px; }
 
-    /* 뒤로가기 */
     .back-btn {
         display: inline-flex; align-items: center; gap: 6px;
         background: none; border: none;
@@ -252,14 +219,12 @@
     }
     .back-btn:active { color: #7aaae8; }
 
-    /* 작은 안내 */
     .auth-note {
         font-size: 11px; color: #5a6680; line-height: 1.6;
         margin-top: 14px;
     }
     .auth-note a { color: #7aaae8; }
 
-    /* 카카오 자동생성 ID 표시 */
     .kakao-id-box {
         margin-top: 14px;
         background: #131826;
@@ -271,7 +236,7 @@
     }
     .kakao-id-box span { color: #e8edf8; font-weight: 700; }
 
-    /* ── 서브 모달 (비번찾기 등) ── */
+    /* ── 서브 모달 ── */
     .sub-modal {
         display: none;
         position: fixed;
@@ -285,10 +250,8 @@
     .sub-modal.open { display: flex; }
     .sub-modal .auth-card { max-width: 340px; }
 
-    /* ── 메인 앱: modal-overlay open 상태 ── */
     .modal-overlay.open { display: flex !important; }
 
-    /* ── 카카오 뱃지 ── */
     .kakao-badge {
         display: inline-block;
         background: #fee500; color: #3c1e1e;
@@ -297,7 +260,6 @@
         vertical-align: middle; margin-left: 4px;
     }
 
-    /* ── 계정 설정 섹션 ── */
     .account-section {
         background: #1e2434;
         border: 1px solid rgba(74,127,203,0.2);
@@ -312,7 +274,6 @@
     }
     .account-row span { color: #5a6680; }
 
-    /* ── 메인앱 버튼 (style.css .btn-primary 사용) ── */
     .acct-btn {
         flex: 1;
         height: 38px !important;
@@ -324,11 +285,51 @@
     }
     .acct-btn.secondary { background: linear-gradient(135deg,#2e4a6e,#1e3352) !important; }
 
-    /* ── nav span ── */
     .nav-item span, .nav-item-main > span { font-size: 10px; }
+
+    /* ── 토스트 알림 ── */
+    #toast {
+        position: fixed;
+        bottom: calc(80px + env(safe-area-inset-bottom));
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: #2a3450;
+        color: #e8edf8;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 20px;
+        border: 1px solid rgba(74,127,203,0.3);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        opacity: 0;
+        transition: opacity 0.25s, transform 0.25s;
+        z-index: 9999;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+    #toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── 로딩 스피너 ── */
+    .spin {
+        display: inline-block;
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,0.2);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+
+<!-- 토스트 알림 -->
+<div id="toast"></div>
 
 <!-- ══════════════════════════════════════════
      뷰 A: 로그인
@@ -337,7 +338,7 @@
     <div class="auth-screen">
         <div class="auth-card">
             <div class="auth-logo-wrap">
-                <h1 class="kitsch-logo"> KATCHI - TAPSIDA</h1>
+                <h1 class="kitsch-logo">🚕 KATCHI - TAPSIDA</h1>
                 <div class="auth-tagline">험프리스 카투사 전용 카풀 서비스<br>계정이 없다면 아래에서 회원가입하세요</div>
             </div>
 
@@ -353,7 +354,7 @@
 
             <div id="login-msg" class="fmsg" style="margin-top:6px;"></div>
 
-            <button class="auth-btn" onclick="doLogin()">로그인</button>
+            <button id="login-btn" class="auth-btn" onclick="doLogin()">로그인</button>
 
             <div class="auth-divider">또는</div>
 
@@ -387,7 +388,6 @@
                 <div class="auth-tagline">아래 정보를 입력해 계정을 만드세요</div>
             </div>
 
-            <!-- 아이디 -->
             <label>아이디 <span style="color:#ff6b6b">*</span></label>
             <div class="id-row">
                 <input type="text" id="reg-id" placeholder="영문·숫자·한글 2~20자"
@@ -457,7 +457,7 @@
 
             <div id="kr-msg" class="fmsg" style="margin-top:8px;font-size:12px;"></div>
 
-            <button class="auth-btn" onclick="doKakaoRegister()">시작하기 🫡</button>
+            <button id="kr-submit-btn" class="auth-btn" onclick="doKakaoRegister()">시작하기 🫡</button>
         </div>
     </div>
 </div>
@@ -511,9 +511,7 @@
             </div>
             <div style="margin-bottom:12px;">
                 <label>날짜</label>
-                <select id="search-date" onchange="searchPool()" style="height:42px;font-size:14px;margin-bottom:0;">
-                    <!-- JS로 채움 -->
-                </select>
+                <select id="search-date" onchange="searchPool()" style="height:42px;font-size:14px;margin-bottom:0;"></select>
             </div>
             <div style="display:flex;gap:10px;">
                 <div style="flex:1;">
@@ -540,7 +538,7 @@
             <div class="account-row"><span>로그인 방식</span><strong id="acct-provider" style="font-size:12px;">-</strong></div>
             <div class="account-row"><span>등록 이메일</span><strong id="acct-email" style="font-size:11px;color:#5a6680;">미등록</strong></div>
             <div style="display:flex;gap:8px;margin-top:12px;">
-                <button class="btn-primary acct-btn" onclick="openSubModal('change-pw-modal')">🔒 비밀번호 변경</button>
+                <button class="btn-primary acct-btn" onclick="openChangePwModal()">🔒 비밀번호 변경</button>
                 <button class="btn-primary acct-btn secondary" onclick="openSubModal('email-modal')">📧 이메일 등록</button>
             </div>
         </div>
@@ -749,31 +747,45 @@
 
 // ── 전역 상태 ──
 const socket = io();
-let myId = '', myProvider = 'local';
+let myId       = '';
+let myProvider = 'local';
+let mySessionId = '';          // ✅ FIX: strict mode ReferenceError 방지
 let allRoomsData = [];
 let isSearchMode = false;
 let currentSearchCriteria = { origin:'', dest:'', date:'' };
 let currentRoomIdForPay = null;
-let resetToken = null;
-let idChecked = false;
+let resetToken  = null;
+let idChecked   = false;
 let kakaoTempToken = null;
-let kakaoUserId = null;
+let kakaoUserId    = null;
 let cachedSpecificSpots = {};
 
-// 날짜 필터용 선택지 (오늘부터 7일)
-let searchDateOptions = [];
+// ── 로그인 소켓 타임아웃 ──
+let loginTimer = null;
 
 // ── 카카오 인앱브라우저 탈출 ──
-(function() {
+(function () {
     const ua = navigator.userAgent.toLowerCase();
     if (!ua.includes('kakaotalk')) return;
     const cur = location.href;
     if (ua.includes('iphone') || ua.includes('ipad')) {
         location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(cur);
     } else {
-        location.href = 'intent://' + cur.replace(/https?:\/\//,'') + '#Intent;scheme=http;package=com.android.chrome;end';
+        location.href = 'intent://' + cur.replace(/https?:\/\//, '') + '#Intent;scheme=http;package=com.android.chrome;end';
     }
 })();
+
+// ════════════════════════════
+// 토스트
+// ════════════════════════════
+let _toastTimer = null;
+function showToast(msg, duration = 2500) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
 
 // ════════════════════════════
 // 뷰 전환
@@ -781,7 +793,6 @@ let searchDateOptions = [];
 function showView(id) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    // 뷰 전환 시 스크롤 초기화
     const screen = document.querySelector('#' + id + ' .auth-screen');
     if (screen) screen.scrollTop = 0;
 }
@@ -792,12 +803,12 @@ function showView(id) {
 window.addEventListener('DOMContentLoaded', () => {
     const p = new URLSearchParams(location.search);
 
+    // 카카오 로그인 완료 (기존 유저)
     if (p.get('kakao_token')) {
         history.replaceState({}, '', '/');
-        // REST API로 카카오 토큰 검증 (소켓 타이밍 문제 우회)
         (async () => {
             try {
-                const res = await fetch('/api/kakao-verify', {
+                const res  = await fetch('/api/kakao-verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: p.get('kakao_token') })
@@ -806,15 +817,18 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (res.ok && data.ok) {
                     handleLoginData(data);
                 } else {
-                    alert(data.error || '카카오 로그인에 실패했습니다.');
+                    showView('view-login');
+                    setLoginMsg(data.error || '카카오 로그인에 실패했습니다.');
                 }
-            } catch(e) {
-                alert('카카오 로그인 처리 중 오류가 발생했습니다.');
+            } catch (e) {
+                showView('view-login');
+                setLoginMsg('카카오 로그인 처리 중 오류가 발생했습니다.');
             }
         })();
         return;
     }
 
+    // 카카오 신규 가입 추가정보
     if (p.get('kakao_register') === '1') {
         history.replaceState({}, '', '/');
         kakaoTempToken = p.get('tempToken');
@@ -828,12 +842,15 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // 카카오 오류
     if (p.get('kakao_error')) {
         history.replaceState({}, '', '/');
-        alert('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+        showView('view-login');
+        setLoginMsg('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
         return;
     }
 
+    // 비밀번호 재설정 링크
     const tok = p.get('token');
     if (tok && location.pathname.includes('reset-password')) {
         resetToken = tok;
@@ -842,7 +859,7 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 세션 기반 자동 로그인 (REST — 소켓 준비 전 호출 문제 우회)
+    // 세션 자동 로그인 (REST 우선, 소켓 폴백)
     const savedSession = localStorage.getItem('session_id');
     if (savedSession) {
         (async () => {
@@ -855,16 +872,17 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.ok) {
-                        // 세션 유효 → 소켓에도 userId 설정해야 하므로 소켓 로그인도 병행
+                        // REST 성공 → 소켓도 세션 등록 (서버 socket.userId 설정)
                         socket.emit('session_login', { sessionId: savedSession });
+                        handleLoginData({ ...data, sessionId: savedSession });
                     } else {
                         localStorage.removeItem('session_id');
                     }
                 } else {
                     localStorage.removeItem('session_id');
                 }
-            } catch(e) {
-                // 네트워크 오류 시 소켓으로 폴백
+            } catch (e) {
+                // 네트워크 오류 → 소켓 폴백
                 socket.emit('session_login', { sessionId: savedSession });
             }
         })();
@@ -874,24 +892,49 @@ window.addEventListener('DOMContentLoaded', () => {
 // ════════════════════════════
 // 로그인
 // ════════════════════════════
+function setLoginMsg(txt, cls = 'err') {
+    const el = document.getElementById('login-msg');
+    if (!el) return;
+    el.className = 'fmsg ' + cls;
+    el.innerHTML = txt;
+}
+
 function doLogin() {
-    const userId = (document.getElementById('login-id').value || '').trim();
-    const userPw = document.getElementById('login-pw').value || '';
-    const msgEl  = document.getElementById('login-msg');
-    msgEl.className = 'fmsg';
-    msgEl.innerHTML = '';
-    if (!userId) { msgEl.className='fmsg err'; msgEl.innerText='아이디를 입력하세요.'; return; }
-    if (!userPw) { msgEl.className='fmsg err'; msgEl.innerText='비밀번호를 입력하세요.'; return; }
+    const userId = (document.getElementById('login-id').value  || '').trim();
+    const userPw =  document.getElementById('login-pw').value  || '';
+    setLoginMsg('');
+    if (!userId) return setLoginMsg('아이디를 입력하세요.');
+    if (!userPw) return setLoginMsg('비밀번호를 입력하세요.');
+
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>로그인 중...';
+
+    // ✅ FIX: 소켓 응답 없을 시 타임아웃 처리
+    clearTimeout(loginTimer);
+    loginTimer = setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = '로그인';
+        setLoginMsg('응답이 없습니다. 잠시 후 다시 시도해주세요.');
+    }, 8000);
+
     socket.emit('login', { userId, userPw });
+}
+
+function resetLoginBtn() {
+    clearTimeout(loginTimer);
+    const btn = document.getElementById('login-btn');
+    if (btn) { btn.disabled = false; btn.textContent = '로그인'; }
 }
 
 function loginWithKakao() { location.href = '/auth/kakao'; }
 
-// ── REST 로그인 결과를 소켓 login_success 와 동일하게 처리 ──
+// REST / 소켓 로그인 결과 공통 처리
 function handleLoginData(data) {
+    resetLoginBtn();
     myId        = data.userId;
     myProvider  = data.provider || 'local';
-    mySessionId = data.sessionId;
+    mySessionId = data.sessionId || mySessionId;
     if (data.sessionId) localStorage.setItem('session_id', data.sessionId);
     localStorage.removeItem('auto_id');
     localStorage.removeItem('auto_pw');
@@ -899,34 +942,34 @@ function handleLoginData(data) {
     document.getElementById('header-user-id').innerText = myId;
     const badge = document.getElementById('header-kakao-badge');
     badge.style.display = (myProvider === 'kakao' || myProvider === 'both') ? 'inline-block' : 'none';
+
     document.getElementById('acct-id').innerText = myId;
     document.getElementById('acct-provider').innerText =
-        ({ local:'아이디/비밀번호', kakao:'카카오', both:'아이디/카카오' })[myProvider] || '-';
+        ({ local: '아이디/비밀번호', kakao: '카카오', both: '아이디/카카오' })[myProvider] || '-';
     if (data.email) {
-        document.getElementById('acct-email').innerText = data.email;
+        document.getElementById('acct-email').innerText    = data.email;
         document.getElementById('acct-email').style.color = '#c8d6f0';
     }
+
     showView('view-main');
     initMainApp();
 }
 
 socket.on('login_fail', ({ reason }) => {
+    resetLoginBtn();
     localStorage.removeItem('session_id');
     showView('view-login');
-    const msgEl = document.getElementById('login-msg');
-    if (!msgEl) return;
-    msgEl.className = 'fmsg err';
     if (reason === 'no_user') {
-        msgEl.innerHTML = '등록되지 않은 아이디입니다. <button class="link-btn" style="font-size:12px;" onclick="showView(\'view-register\')">회원가입 →</button>';
+        setLoginMsg('등록되지 않은 아이디입니다. <button class="link-btn" style="font-size:12px;" onclick="showView(\'view-register\')">회원가입 →</button>');
     } else if (reason === 'session_expired') {
-        // 세션 만료 — 조용히 로그인 화면만 보여줌 (에러 메시지 없음)
+        // 세션 만료 — 조용히 로그인 화면만 보여줌
     } else {
-        msgEl.innerText = '로그인에 실패했습니다.';
+        setLoginMsg('로그인에 실패했습니다.');
     }
 });
 
 socket.on('login_success', (data) => {
-    // 이미 REST로 로그인 처리된 경우 소켓 userId만 설정하고 UI 재처리 안 함
+    // 이미 REST로 처리된 경우 소켓 userId·sessionId만 동기화
     if (myId && myId === data.userId) {
         mySessionId = data.sessionId || mySessionId;
         if (data.sessionId) localStorage.setItem('session_id', data.sessionId);
@@ -937,12 +980,12 @@ socket.on('login_success', (data) => {
 
 socket.on('error_msg', msg => {
     if (!myId) {
+        resetLoginBtn();
         localStorage.removeItem('session_id');
         showView('view-login');
-        const msgEl = document.getElementById('login-msg');
-        if (msgEl) { msgEl.className = 'fmsg err'; msgEl.innerText = msg; }
+        setLoginMsg(msg);
     } else {
-        alert(msg);
+        showToast('⚠️ ' + msg);
     }
 });
 
@@ -958,45 +1001,54 @@ function logout() {
 async function checkId() {
     const userId = (document.getElementById('reg-id').value || '').trim();
     const msgEl  = document.getElementById('reg-id-msg');
-    if (!userId) { msgEl.className='fmsg err'; msgEl.innerText='아이디를 입력해주세요.'; return; }
-    msgEl.className='fmsg inf'; msgEl.innerText='확인 중...';
+    if (!userId) { msgEl.className = 'fmsg err'; msgEl.innerText = '아이디를 입력해주세요.'; return; }
+    msgEl.className = 'fmsg inf'; msgEl.innerText = '확인 중...';
     try {
         const r = await fetch('/api/check-id?userId=' + encodeURIComponent(userId));
         const d = await r.json();
-        if (d.available) { msgEl.className='fmsg ok'; msgEl.innerText='✓ 사용 가능한 아이디입니다.'; idChecked=true; }
-        else             { msgEl.className='fmsg err'; msgEl.innerText=d.reason; idChecked=false; }
-    } catch { msgEl.className='fmsg err'; msgEl.innerText='확인 중 오류가 발생했습니다.'; }
+        if (d.available) { msgEl.className = 'fmsg ok'; msgEl.innerText = '✓ 사용 가능한 아이디입니다.'; idChecked = true; }
+        else             { msgEl.className = 'fmsg err'; msgEl.innerText = d.reason; idChecked = false; }
+    } catch { msgEl.className = 'fmsg err'; msgEl.innerText = '확인 중 오류가 발생했습니다.'; }
 }
 
-function resetIdCheck() { idChecked=false; const m=document.getElementById('reg-id-msg'); m.className='fmsg'; m.innerText=''; }
+function resetIdCheck() {
+    idChecked = false;
+    const m = document.getElementById('reg-id-msg');
+    m.className = 'fmsg'; m.innerText = '';
+}
 
 async function doRegister() {
-    const userId   = (document.getElementById('reg-id').value||'').trim();
-    const password = document.getElementById('reg-pw').value||'';
-    const pw2      = document.getElementById('reg-pw2').value||'';
-    const name     = (document.getElementById('reg-name').value||'').trim();
-    const phone    = (document.getElementById('reg-phone').value||'').trim();
-    const birthdate= document.getElementById('reg-birth').value||'';
-    const email    = (document.getElementById('reg-email').value||'').trim();
-    const msgEl    = document.getElementById('reg-global-msg');
+    const userId    = (document.getElementById('reg-id').value    || '').trim();
+    const password  =  document.getElementById('reg-pw').value   || '';
+    const pw2       =  document.getElementById('reg-pw2').value  || '';
+    const name      = (document.getElementById('reg-name').value  || '').trim();
+    const phone     = (document.getElementById('reg-phone').value || '').trim();
+    const birthdate =  document.getElementById('reg-birth').value || '';
+    const email     = (document.getElementById('reg-email').value || '').trim();
+    const msgEl     =  document.getElementById('reg-global-msg');
 
-    const err = t => { msgEl.className='fmsg err'; msgEl.innerText=t; };
-    const ok  = t => { msgEl.className='fmsg ok';  msgEl.innerText=t; };
+    const err = t => { msgEl.className = 'fmsg err'; msgEl.innerText = t; };
+    const ok  = t => { msgEl.className = 'fmsg ok';  msgEl.innerText = t; };
+    const inf = t => { msgEl.className = 'fmsg inf'; msgEl.innerText = t; };
 
-    if (!idChecked)       return err('아이디 중복 확인을 먼저 해주세요.');
-    if (!password)        return err('비밀번호를 입력하세요.');
+    if (!idChecked)          return err('아이디 중복 확인을 먼저 해주세요.');
+    if (!password)           return err('비밀번호를 입력하세요.');
     if (password.length < 4) return err('비밀번호는 4자 이상이어야 합니다.');
-    if (password !== pw2) return err('비밀번호가 일치하지 않습니다.');
-    if (!name)            return err('실명을 입력하세요.');
-    if (!phone)           return err('휴대폰 번호를 입력하세요.');
+    if (password !== pw2)    return err('비밀번호가 일치하지 않습니다.');
+    if (!name)               return err('실명을 입력하세요.');
+    if (!phone)              return err('휴대폰 번호를 입력하세요.');
 
     const btn = document.getElementById('reg-submit-btn');
     btn.disabled = true;
-    msgEl.className='fmsg inf'; msgEl.innerText='가입 중...';
+    btn.innerHTML = '<span class="spin"></span>가입 중...';
+    inf('가입 중...');
 
     try {
-        const res  = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ userId, password, name, phone, birthdate, email }) });
+        const res  = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, password, name, phone, birthdate, email })
+        });
         const data = await res.json();
         if (res.ok && data.ok) {
             ok('✓ 가입 완료! 로그인해주세요.');
@@ -1010,52 +1062,58 @@ async function doRegister() {
             err(data.error || '가입에 실패했습니다.');
         }
     } catch { err('서버 오류가 발생했습니다.'); }
-    finally  { btn.disabled = false; }
+    finally  { btn.disabled = false; btn.textContent = '가입하기'; }
 }
 
 // ════════════════════════════
 // 카카오 회원가입
 // ════════════════════════════
 async function doKakaoRegister() {
-    const name     = (document.getElementById('kr-name').value||'').trim();
-    const phone    = (document.getElementById('kr-phone').value||'').trim();
-    const birthdate= document.getElementById('kr-birth').value||'';
-    const email    = (document.getElementById('kr-email').value||'').trim();
-    const msgEl    = document.getElementById('kr-msg');
+    const name      = (document.getElementById('kr-name').value  || '').trim();
+    const phone     = (document.getElementById('kr-phone').value || '').trim();
+    const birthdate =  document.getElementById('kr-birth').value || '';
+    const email     = (document.getElementById('kr-email').value || '').trim();
+    const msgEl     =  document.getElementById('kr-msg');
+    const btn       =  document.getElementById('kr-submit-btn');
 
-    const err = t => { msgEl.className='fmsg err'; msgEl.innerText=t; };
+    const err = t => { msgEl.className = 'fmsg err'; msgEl.innerText = t; };
+    const inf = t => { msgEl.className = 'fmsg inf'; msgEl.innerText = t; };
 
     if (!name)  return err('실명을 입력해주세요.');
     if (!phone) return err('휴대폰 번호를 입력해주세요.');
 
-    msgEl.className='fmsg inf'; msgEl.innerText='저장 중...';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>저장 중...';
+    inf('저장 중...');
 
     try {
-        const res  = await fetch('/api/kakao-register', { method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ tempToken:kakaoTempToken, userId:kakaoUserId, name, phone, birthdate, email }) });
+        const res  = await fetch('/api/kakao-register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tempToken: kakaoTempToken, userId: kakaoUserId, name, phone, birthdate, email })
+        });
         const data = await res.json();
-        if (res.ok && data.ok) {
-            msgEl.className='fmsg inf'; msgEl.innerText='✓ 저장 완료! 입장 중...';
-            // REST API로 카카오 인증 (소켓 타이밍 문제 우회)
-            try {
-                const vRes = await fetch('/api/kakao-verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: kakaoTempToken })
-                });
-                const vData = await vRes.json();
-                if (vRes.ok && vData.ok) {
-                    handleLoginData(vData);
-                } else {
-                    err(vData.error || '로그인 처리에 실패했습니다. 다시 시도해주세요.');
-                }
-            } catch(e) {
-                err('로그인 처리 중 오류가 발생했습니다.');
-            }
-        } else {
+        if (!res.ok || !data.ok) {
             err(data.error || '저장에 실패했습니다.');
+            return;
+        }
+
+        inf('✓ 저장 완료! 입장 중...');
+
+        // ✅ kakao-register가 토큰을 소비하지 않으므로 verify로 세션 발급
+        const vRes  = await fetch('/api/kakao-verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: kakaoTempToken })
+        });
+        const vData = await vRes.json();
+        if (vRes.ok && vData.ok) {
+            handleLoginData(vData);
+        } else {
+            err(vData.error || '로그인 처리에 실패했습니다. 다시 시도해주세요.');
         }
     } catch { err('서버 오류가 발생했습니다.'); }
+    finally  { btn.disabled = false; btn.textContent = '시작하기 🫡'; }
 }
 
 // ════════════════════════════
@@ -1067,15 +1125,16 @@ async function initMainApp() {
     dateSelect.innerHTML = '';
     const todayOpt = document.createElement('option');
     todayOpt.value = ''; todayOpt.innerText = '날짜 전체'; dateSelect.appendChild(todayOpt);
+
+    const koDays = ['일', '월', '화', '수', '목', '금', '토'];
     for (let i = 0; i < 8; i++) {
-        const d = new Date(Date.now() + i * 86400000);
+        const d   = new Date(Date.now() + i * 86400000);
         const val = d.toISOString().split('T')[0];
-        const koDays = ['일','월','화','수','목','금','토'];
-        const label = i === 0
-            ? `오늘 (${val.slice(5).replace('-','/')})`
-            : `${val.slice(5).replace('-','/')} (${koDays[d.getDay()]})`;
+        const lbl = i === 0
+            ? `오늘 (${val.slice(5).replace('-', '/')})`
+            : `${val.slice(5).replace('-', '/')} (${koDays[d.getDay()]})`;
         const opt = document.createElement('option');
-        opt.value = val; opt.innerText = label;
+        opt.value = val; opt.innerText = lbl;
         if (i === 0) opt.selected = true;
         dateSelect.appendChild(opt);
     }
@@ -1085,7 +1144,7 @@ async function initMainApp() {
         const locations = await locRes.json();
         cachedSpecificSpots = await spotRes.json();
         const optHtml = locations.map(l => `<option value="${l}">${l}</option>`).join('');
-        ['origin-select','dest-select','search-origin','search-dest'].forEach(id => {
+        ['origin-select', 'dest-select', 'search-origin', 'search-dest'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
             const lbl = id.includes('origin') ? '출발지' : '목적지';
@@ -1093,80 +1152,83 @@ async function initMainApp() {
         });
     } catch (e) { console.error('데이터 로드 실패', e); }
 
-    // date-input 기본값
     document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
-
     socket.emit('request_init_rooms');
 }
 
 // ════════════════════════════
 // 모달 유틸
 // ════════════════════════════
-function openModal(id) {
-    const el = document.getElementById(id);
-    if (el) { el.style.display='flex'; void el.offsetHeight; }
-}
-function closeModal(id) {
-    const el = document.getElementById(id);
-    if (el) el.style.display='none';
-}
+function openModal(id)     { const el = document.getElementById(id); if (el) { el.style.display = 'flex'; void el.offsetHeight; } }
+function closeModal(id)    { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
 function openSubModal(id)  { document.getElementById(id)?.classList.add('open'); }
 function closeSubModal(id) { document.getElementById(id)?.classList.remove('open'); }
-function openPrivacy()  { openSubModal('privacy-modal'); }
-function closePrivacy() { closeSubModal('privacy-modal'); }
+function openPrivacy()     { openSubModal('privacy-modal'); }
 
 // ════════════════════════════
 // 비밀번호 찾기
 // ════════════════════════════
 async function submitForgot() {
-    const email = (document.getElementById('forgot-email').value||'').trim();
+    const email = (document.getElementById('forgot-email').value || '').trim();
     const msgEl = document.getElementById('forgot-msg');
-    if (!email) { msgEl.className='fmsg err'; msgEl.innerText='이메일을 입력해주세요.'; return; }
-    msgEl.className='fmsg inf'; msgEl.innerText='전송 중...';
+    if (!email) { msgEl.className = 'fmsg err'; msgEl.innerText = '이메일을 입력해주세요.'; return; }
+    msgEl.className = 'fmsg inf'; msgEl.innerText = '전송 중...';
     try {
-        await fetch('/api/request-reset', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email }) });
-        msgEl.className='fmsg ok'; msgEl.innerText='이메일을 확인해주세요. (스팸 폴더도 확인)';
-    } catch { msgEl.className='fmsg err'; msgEl.innerText='전송에 실패했습니다.'; }
+        await fetch('/api/request-reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        msgEl.className = 'fmsg ok'; msgEl.innerText = '이메일을 확인해주세요. (스팸 폴더도 확인)';
+    } catch { msgEl.className = 'fmsg err'; msgEl.innerText = '전송에 실패했습니다.'; }
 }
 
 async function submitReset() {
-    const pw  = document.getElementById('reset-pw').value||'';
-    const pw2 = document.getElementById('reset-pw2').value||'';
+    const pw  = document.getElementById('reset-pw').value  || '';
+    const pw2 = document.getElementById('reset-pw2').value || '';
     const msg = document.getElementById('reset-msg');
-    if (pw.length < 4) { msg.innerText='4자 이상 입력해주세요.'; return; }
-    if (pw !== pw2)    { msg.innerText='비밀번호가 일치하지 않습니다.'; return; }
+    if (pw.length < 4) { msg.innerText = '4자 이상 입력해주세요.'; return; }
+    if (pw !== pw2)    { msg.innerText = '비밀번호가 일치하지 않습니다.'; return; }
     try {
-        const res  = await fetch('/api/reset-password', { method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ token:resetToken, newPassword:pw }) });
+        const res  = await fetch('/api/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: resetToken, newPassword: pw })
+        });
         const data = await res.json();
-        if (data.ok) { alert('비밀번호가 변경되었습니다! 다시 로그인해주세요.'); closeSubModal('reset-modal'); }
-        else msg.innerText = data.error || '오류가 발생했습니다.';
-    } catch { msg.innerText='서버 오류가 발생했습니다.'; }
+        if (data.ok) {
+            closeSubModal('reset-modal');
+            showView('view-login');
+            setLoginMsg('✓ 비밀번호가 변경되었습니다. 다시 로그인해주세요.', 'ok');
+        } else {
+            msg.innerText = data.error || '오류가 발생했습니다.';
+        }
+    } catch { msg.innerText = '서버 오류가 발생했습니다.'; }
 }
 
 // ════════════════════════════
 // 비밀번호 변경 (로그인 상태)
 // ════════════════════════════
 function openChangePwModal() {
-    document.getElementById('change-pw-current-wrap').style.display = myProvider==='kakao' ? 'none' : 'block';
-    ['change-pw-current','change-pw-new','change-pw-new2'].forEach(id => document.getElementById(id).value='');
-    document.getElementById('change-pw-msg').innerText='';
+    document.getElementById('change-pw-current-wrap').style.display = myProvider === 'kakao' ? 'none' : 'block';
+    ['change-pw-current', 'change-pw-new', 'change-pw-new2'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('change-pw-msg').innerText = '';
     openSubModal('change-pw-modal');
 }
 
 function submitChangePw() {
-    const current = document.getElementById('change-pw-current').value||'';
-    const newPw   = document.getElementById('change-pw-new').value||'';
-    const newPw2  = document.getElementById('change-pw-new2').value||'';
+    const current = document.getElementById('change-pw-current').value || '';
+    const newPw   = document.getElementById('change-pw-new').value    || '';
+    const newPw2  = document.getElementById('change-pw-new2').value   || '';
     const msg     = document.getElementById('change-pw-msg');
-    if (newPw.length < 4) { msg.innerText='새 비밀번호는 4자 이상이어야 합니다.'; return; }
-    if (newPw !== newPw2)  { msg.innerText='새 비밀번호가 일치하지 않습니다.'; return; }
+    if (newPw.length < 4) { msg.innerText = '새 비밀번호는 4자 이상이어야 합니다.'; return; }
+    if (newPw !== newPw2)  { msg.innerText = '새 비밀번호가 일치하지 않습니다.'; return; }
     socket.emit('change_password', { currentPw: current, newPw });
 }
 
 socket.on('change_password_success', () => {
-    alert('비밀번호가 변경되었습니다!');
     closeSubModal('change-pw-modal');
+    showToast('✅ 비밀번호가 변경되었습니다!');
     if (myProvider === 'kakao') {
         myProvider = 'both';
         document.getElementById('acct-provider').innerText = '아이디/카카오';
@@ -1177,30 +1239,29 @@ socket.on('change_password_success', () => {
 // 이메일 등록
 // ════════════════════════════
 function submitEmail() {
-    const email = (document.getElementById('reg-email-modal').value||'').trim();
+    const email = (document.getElementById('reg-email-modal').value || '').trim();
     const msg   = document.getElementById('email-msg');
-    if (!email || !email.includes('@')) { msg.className='fmsg err'; msg.innerText='올바른 이메일을 입력해주세요.'; return; }
+    if (!email || !email.includes('@')) { msg.className = 'fmsg err'; msg.innerText = '올바른 이메일을 입력해주세요.'; return; }
     socket.emit('update_email', { email });
 }
 
 socket.on('update_email_success', () => {
-    const email = (document.getElementById('reg-email-modal').value||'').trim();
-    document.getElementById('acct-email').innerText = email;
+    const email = (document.getElementById('reg-email-modal').value || '').trim();
+    document.getElementById('acct-email').innerText    = email;
     document.getElementById('acct-email').style.color = '#c8d6f0';
-    const msg = document.getElementById('email-msg');
-    msg.className='fmsg ok'; msg.innerText='등록되었습니다!';
-    setTimeout(() => closeSubModal('email-modal'), 1200);
+    showToast('✅ 이메일이 등록되었습니다!');
+    setTimeout(() => closeSubModal('email-modal'), 800);
 });
 
 // ════════════════════════════
 // 탭 전환
 // ════════════════════════════
 function switchTab(name) {
-    document.querySelectorAll('.tab-content').forEach(el => el.style.display='none');
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-'+name).style.display = 'block';
-    document.getElementById('nav-'+name).classList.add('active');
-    if (name==='my') { renderMyRooms(); socket.emit('request_history'); }
+    document.getElementById('tab-' + name).style.display = 'block';
+    document.getElementById('nav-' + name).classList.add('active');
+    if (name === 'my') { renderMyRooms(); socket.emit('request_history'); }
 }
 
 // ════════════════════════════
@@ -1211,18 +1272,18 @@ function updateSpecificSpots() {
     const sel    = document.getElementById('specific-spot-select');
     const inp    = document.getElementById('custom-spot-input');
     sel.innerHTML = '<option value="">-- 세부 장소 선택 (선택) --</option>';
-    (cachedSpecificSpots[origin]||[]).forEach(s => {
-        const o = document.createElement('option'); o.value=s; o.innerText=s; sel.appendChild(o);
+    (cachedSpecificSpots[origin] || []).forEach(s => {
+        const o = document.createElement('option'); o.value = s; o.innerText = s; sel.appendChild(o);
     });
-    const co = document.createElement('option'); co.value='custom'; co.innerText='직접 입력'; sel.appendChild(co);
-    inp.style.display='none';
+    const co = document.createElement('option'); co.value = 'custom'; co.innerText = '직접 입력'; sel.appendChild(co);
+    inp.style.display = 'none';
 }
 
 function toggleCustomSpot() {
     const sel = document.getElementById('specific-spot-select');
     const inp = document.getElementById('custom-spot-input');
-    inp.style.display = sel.value==='custom' ? 'block' : 'none';
-    if (sel.value==='custom') inp.focus();
+    inp.style.display = sel.value === 'custom' ? 'block' : 'none';
+    if (sel.value === 'custom') inp.focus();
 }
 
 // ════════════════════════════
@@ -1232,101 +1293,121 @@ function searchPool() {
     const origin = document.getElementById('search-origin').value;
     const dest   = document.getElementById('search-dest').value;
     const date   = document.getElementById('search-date').value;
-    // 출발·도착·날짜 중 하나라도 선택했으면 검색모드
-    // date='' 은 "날짜 전체" 의미 — 서버에서 오늘 이후 전체 조회
     isSearchMode = !!(origin || dest || date);
     if (isSearchMode) socket.emit('search_rooms', { origin, dest, date });
     else socket.emit('request_init_rooms');
 }
 
+// ✅ FIX: resetSearch 후 searchPool 호출해 날짜 필터 잔존 방지
 function resetSearch() {
     isSearchMode = false;
     document.getElementById('search-origin').value = '';
     document.getElementById('search-dest').value   = '';
-    // 날짜 셀렉터 오늘로 리셋
     const ds = document.getElementById('search-date');
-    if (ds.options.length > 1) ds.selectedIndex = 1;
+    if (ds.options.length > 1) ds.selectedIndex = 1; // 오늘
     socket.emit('request_init_rooms');
+    document.getElementById('list-title').innerText = '실시간 카풀 목록';
 }
 
 socket.on('update_rooms', data => {
     allRoomsData = data.rooms || [];
     if (!isSearchMode) renderRooms(allRoomsData, data.searchCriteria, 'room-list');
-    if (document.getElementById('tab-my')?.style.display==='block') renderMyRooms();
+    if (document.getElementById('tab-my')?.style.display === 'block') renderMyRooms();
 });
 
 socket.on('search_result', data => {
     isSearchMode = true;
-    renderRooms(data.rooms||[], data.searchCriteria, 'room-list');
+    renderRooms(data.rooms || [], data.searchCriteria, 'room-list');
 });
 
 // ════════════════════════════
 // 방 CRUD
 // ════════════════════════════
 function createRoom() {
-    const origin  = document.getElementById('origin-select').value;
-    const dest    = document.getElementById('dest-select').value;
-    const date    = document.getElementById('date-input').value;
-    const time    = document.getElementById('time-input').value;
-    const maxPax  = document.getElementById('max-pax-select').value;
-    const spotSel = document.getElementById('specific-spot-select');
-    const customI = document.getElementById('custom-spot-input');
-    const specificLocation = spotSel.value==='custom' ? customI.value.trim() : spotSel.value;
-    if (!origin)  return alert('출발지를 선택해주세요.');
-    if (!dest)    return alert('목적지를 선택해주세요.');
-    if (!date)    return alert('날짜를 입력해주세요.');
-    if (!time)    return alert('시간을 입력해주세요.');
-    if (origin===dest) return alert('출발지와 목적지가 같습니다!');
-    if (date < new Date().toISOString().split('T')[0]) return alert('오늘 이후 날짜만 선택할 수 있습니다.');
+    const origin   = document.getElementById('origin-select').value;
+    const dest     = document.getElementById('dest-select').value;
+    const date     = document.getElementById('date-input').value;
+    const time     = document.getElementById('time-input').value;
+    const maxPax   = document.getElementById('max-pax-select').value;
+    const spotSel  = document.getElementById('specific-spot-select');
+    const customI  = document.getElementById('custom-spot-input');
+    const specificLocation = spotSel.value === 'custom' ? customI.value.trim() : spotSel.value;
+
+    if (!origin)           return showToast('⚠️ 출발지를 선택해주세요.');
+    if (!dest)             return showToast('⚠️ 목적지를 선택해주세요.');
+    if (!date)             return showToast('⚠️ 날짜를 입력해주세요.');
+    if (!time)             return showToast('⚠️ 시간을 입력해주세요.');
+    if (origin === dest)   return showToast('⚠️ 출발지와 목적지가 같습니다!');
+    if (date < new Date().toISOString().split('T')[0]) return showToast('⚠️ 오늘 이후 날짜만 선택할 수 있습니다.');
+
     socket.emit('create_room', { origin, dest, date, time, specificLocation, maxPax: parseInt(maxPax) });
     closeModal('create-modal');
 }
 
-function joinRoom(id)   { if (confirm('참여하시겠습니까?'))        socket.emit('join_room', id); }
-function cancelJoin(id) { if (confirm('참여를 취소하시겠습니까?')) socket.emit('cancel_join', { roomId:id }); }
-
-function submitPayment() {
-    const amount  = document.getElementById('pay-amount').value;
-    const bank    = document.getElementById('pay-bank').value;
-    const account = (document.getElementById('pay-account').value||'').trim();
-    if (!amount || !account) return alert('금액과 계좌번호를 입력하세요.');
-    const safe = parseInt(amount);
-    if (isNaN(safe)||safe<=0||safe>10000000) return alert('올바른 금액을 입력해주세요.');
-    socket.emit('submit_payment', { roomId:currentRoomIdForPay, amount:safe, bank, account });
-    closeModal('payment-modal');
+function joinRoom(id) {
+    if (confirm('참여하시겠습니까?')) socket.emit('join_room', id);
 }
 
+// ✅ FIX: 방장 취소 시 경고 문구 추가
+function cancelJoin(roomId, isCreator) {
+    const msg = isCreator
+        ? '방장이 취소하면 방 전체가 삭제됩니다. 정말 취소하시겠습니까?'
+        : '참여를 취소하시겠습니까?';
+    if (confirm(msg)) socket.emit('cancel_join', { roomId });
+}
+
+function submitPayment() {
+    const amount  =  document.getElementById('pay-amount').value;
+    const bank    =  document.getElementById('pay-bank').value;
+    const account = (document.getElementById('pay-account').value || '').trim();
+    if (!amount || !account) return showToast('⚠️ 금액과 계좌번호를 입력하세요.');
+    const safe = parseInt(amount);
+    if (isNaN(safe) || safe <= 0 || safe > 10000000) return showToast('⚠️ 올바른 금액을 입력해주세요.');
+    socket.emit('submit_payment', { roomId: currentRoomIdForPay, amount: safe, bank, account });
+    closeModal('payment-modal');
+    showToast('💰 정산 정보가 등록되었습니다.');
+}
+
+// ✅ FIX: 서버에서 payment_registered emit 시 토스트 표시 (server.js 수정 필요)
+socket.on('payment_registered', () => showToast('💰 정산 정보가 등록되었습니다.'));
+
 function completePayment(id) {
-    if (confirm('정산 완료 후 방을 삭제할까요?')) socket.emit('complete_payment', { roomId:id });
+    if (confirm('정산 완료 후 방을 삭제할까요?')) socket.emit('complete_payment', { roomId: id });
 }
 
 function copyAccount(acc) {
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(acc).then(() => alert('계좌번호 복사: ' + acc)).catch(() => _legacyCopy(acc));
+        navigator.clipboard.writeText(acc)
+            .then(() => showToast('📋 계좌번호 복사됨: ' + acc))
+            .catch(() => _legacyCopy(acc));
     } else { _legacyCopy(acc); }
 }
+
 function _legacyCopy(text) {
-    const ta = Object.assign(document.createElement('textarea'), { value:text });
-    ta.style.cssText='position:fixed;left:-9999px;opacity:0';
+    const ta = Object.assign(document.createElement('textarea'), { value: text });
+    ta.style.cssText = 'position:fixed;left:-9999px;opacity:0';
     document.body.appendChild(ta); ta.focus(); ta.select();
-    try { document.execCommand('copy'); alert('계좌번호 복사: '+text); } catch { alert(text); }
+    try { document.execCommand('copy'); showToast('📋 계좌번호 복사됨: ' + text); } catch { showToast(text); }
     document.body.removeChild(ta);
 }
 
 function openToss(bank, account) {
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         location.href = `supertoss://send?bank=${encodeURIComponent(bank)}&account=${encodeURIComponent(account)}`;
-        setTimeout(() => { if (confirm('토스 앱으로 이동하지 못했습니다. 앱이 설치되어 있나요?')) location.href='https://toss.im'; }, 1500);
-    } else { alert('토스 송금은 모바일 환경에서만 지원됩니다.'); }
+        setTimeout(() => {
+            if (confirm('토스 앱으로 이동하지 못했습니다. 앱이 설치되어 있나요?')) location.href = 'https://toss.im';
+        }, 1500);
+    } else { showToast('⚠️ 토스 송금은 모바일 환경에서만 지원됩니다.'); }
 }
 
 function shareApp() {
     const text = '[KATCHI-TAPSIDA] 험프리스 카투사 카풀 서비스';
     if (navigator.share) {
-        navigator.share({ title:'KATCHI-TAPSIDA', text, url:location.origin }).catch(()=>{});
+        navigator.share({ title: 'KATCHI-TAPSIDA', text, url: location.origin }).catch(() => {});
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(text + '\n' + location.origin).then(() => showToast('📋 주소가 복사되었습니다!'));
     } else {
-        if (navigator.clipboard) navigator.clipboard.writeText(text+'\n'+location.origin).then(()=>alert('주소가 복사되었습니다!'));
-        else { _legacyCopy(text+'\n'+location.origin); }
+        _legacyCopy(text + '\n' + location.origin);
     }
 }
 
@@ -1334,17 +1415,18 @@ function shareApp() {
 // 히스토리
 // ════════════════════════════
 socket.on('history_updated', () => socket.emit('request_history'));
+
 socket.on('history_data', (history) => {
     const div = document.getElementById('history-list');
     if (!history?.length) {
-        div.innerHTML='<div style="text-align:center;padding:20px;color:#5a6680;font-size:13px;">이용 기록이 없습니다.</div>';
+        div.innerHTML = '<div style="text-align:center;padding:20px;color:#5a6680;font-size:13px;">이용 기록이 없습니다.</div>';
         return;
     }
     div.innerHTML = history.map(it => `
-        <div class="card" style="padding:14px;margin-bottom:10px;border-left:4px solid ${it.isPayer?'var(--accent)':'#4a5568'};">
+        <div class="card" style="padding:14px;margin-bottom:10px;border-left:4px solid ${it.isPayer ? 'var(--accent)' : '#4a5568'};">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
                 <span style="font-size:11px;color:#5a6680;">${it.date} ${it.time}</span>
-                <span class="my-badge" style="background:${it.isPayer?'var(--accent)':'#4a5568'}">${it.isPayer?'결제자':'탑승객'}</span>
+                <span class="my-badge" style="background:${it.isPayer ? 'var(--accent)' : '#4a5568'}">${it.isPayer ? '결제자' : '탑승객'}</span>
             </div>
             <div style="font-size:14px;font-weight:700;color:#c8d6f0;margin-bottom:4px;">${it.origin} ➔ ${it.dest}</div>
             <div style="display:flex;justify-content:space-between;font-size:12px;">
@@ -1357,85 +1439,81 @@ socket.on('history_data', (history) => {
 // ════════════════════════════
 // 렌더링
 // ════════════════════════════
-// 이름 중간 마스킹: 홍길동 → 홍*동, 이순신 → 이*신, AB → A*, ABC → A*C
 function maskName(name) {
     if (!name || name === '?') return '???';
     const n = name.trim();
     if (n.length === 1) return n + '*';
     if (n.length === 2) return n[0] + '*';
-    // 3자 이상: 첫자 + * * ... + 끝자
-    const stars = '*'.repeat(n.length - 2);
-    return n[0] + stars + n[n.length - 1];
+    return n[0] + '*'.repeat(n.length - 2) + n[n.length - 1];
 }
 
 function renderMyRooms() {
-    const mine = allRoomsData.filter(r => (r.participantList||'').split(',').includes(myId));
+    const mine = allRoomsData.filter(r => (r.participantList || '').split(',').includes(myId));
     renderRooms(mine, null, 'my-room-list');
 }
 
 function renderRooms(rooms, searchCriteria, targetId) {
-    const div   = document.getElementById(targetId);
+    const div = document.getElementById(targetId);
     if (!div) return;
-    const kstNow = new Date(Date.now() + 9*3600000);
-    const curD   = kstNow.toISOString().split('T')[0];
-    const curT   = kstNow.toISOString().split('T')[1].substring(0,5);
 
-    if (searchCriteria && targetId==='room-list') {
+    const kstNow = new Date(Date.now() + 9 * 3600000);
+    const curD   = kstNow.toISOString().split('T')[0];
+    const curT   = kstNow.toISOString().split('T')[1].substring(0, 5);
+
+    if (searchCriteria && targetId === 'room-list') {
         currentSearchCriteria = searchCriteria;
-        const o=searchCriteria.origin||'전체', d=searchCriteria.dest||'전체', dt=searchCriteria.date||'전체날짜';
+        const o  = searchCriteria.origin || '전체';
+        const d  = searchCriteria.dest   || '전체';
+        const dt = searchCriteria.date   || '전체날짜';
         document.getElementById('list-title').innerHTML =
             `🔍 <span style="color:var(--accent)">${o} → ${d}</span> <small style="color:#5a6680;margin-left:4px;">(${dt})</small>`;
-    } else if (!isSearchMode && targetId==='room-list') {
+    } else if (!isSearchMode && targetId === 'room-list') {
         document.getElementById('list-title').innerText = '실시간 카풀 목록';
     }
 
     if (!rooms.length) {
-        div.innerHTML=`<div class="card" style="text-align:center;padding:40px;color:#5a6680;">${targetId==='my-room-list'?'참여 중인 카풀이 없습니다.':'등록된 카풀이 없습니다.'}</div>`;
+        div.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:#5a6680;">${targetId === 'my-room-list' ? '참여 중인 카풀이 없습니다.' : '등록된 카풀이 없습니다.'}</div>`;
         return;
     }
 
-    let html='', lastDate='';
+    let html = '', lastDate = '';
+
     rooms.forEach(room => {
-        const ps       = (room.participantList||'').split(',');
-        const isJoined = ps.includes(myId);
-        const isPast   = room.date<curD || (room.date===curD && room.time<curT);
-        const remaining= room.maxPax - room.currentPax;
-        const isFull   = remaining <= 0;
-        const nearO    = isSearchMode && currentSearchCriteria.origin && room.origin!==currentSearchCriteria.origin;
-        const nearD    = isSearchMode && currentSearchCriteria.dest   && room.dest  !==currentSearchCriteria.dest;
-        const origTxt  = room.origin + (nearO?' <small style="color:var(--accent);font-weight:bold;">(인근)</small>':'');
-        const destTxt  = room.dest   + (nearD?' <small style="color:var(--accent);font-weight:bold;">(인근)</small>':'');
-        const specTxt  = room.specificLocation ? `<br><small style="color:#7aaae8;font-size:11px;">📍 ${room.specificLocation}</small>` : '';
+        const ps        = (room.participantList || '').split(',');
+        const isJoined  = ps.includes(myId);
+        const isCreator = room.creatorId === myId;
+        const isPast    = room.date < curD || (room.date === curD && room.time < curT);
+        const remaining = room.maxPax - room.currentPax;
+        const isFull    = remaining <= 0;
 
-        let paxClass='pax-safe', statusText=`${remaining}자리 남음`;
-        if (isFull)             { paxClass='pax-full';    statusText='마감'; }
-        else if (remaining===1) { paxClass='pax-warning'; statusText='마지막 1자리!'; }
+        const nearO   = isSearchMode && currentSearchCriteria.origin && room.origin !== currentSearchCriteria.origin;
+        const nearD   = isSearchMode && currentSearchCriteria.dest   && room.dest   !== currentSearchCriteria.dest;
+        const origTxt = room.origin + (nearO ? ' <small style="color:var(--accent);font-weight:bold;">(인근)</small>' : '');
+        const destTxt = room.dest   + (nearD ? ' <small style="color:var(--accent);font-weight:bold;">(인근)</small>' : '');
+        const specTxt = room.specificLocation ? `<br><small style="color:#7aaae8;font-size:11px;">📍 ${room.specificLocation}</small>` : '';
 
-        if (room.date!==lastDate) {
+        let paxClass = 'pax-safe', statusText = `${remaining}자리 남음`;
+        if (isFull)             { paxClass = 'pax-full';    statusText = '마감'; }
+        else if (remaining === 1) { paxClass = 'pax-warning'; statusText = '마지막 1자리!'; }
+
+        if (room.date !== lastDate) {
             html += `<div class="section-title" style="margin-top:20px;margin-bottom:10px;font-size:13px;">📅 ${room.date}</div>`;
             lastDate = room.date;
         }
 
-        // 정산 섹션
-        // 참여자 명단 (참여자에게만 표시)
+        // 참여자 명단 (참여자에게만)
         let memberSection = '';
         if (isJoined && room.participantList) {
             const ids   = room.participantList.split(',');
             const names = (room.participantNames || '').split(',');
             const members = ids.map((uid, i) => {
-                const isCreator = uid === room.creatorId;
-                const isMe      = uid === myId;
-                const rawName   = names[i] || '?';
-                const masked    = maskName(rawName);
-                return `<span style="
-                    display:inline-flex;align-items:center;gap:4px;
-                    background:${isMe?'rgba(74,127,203,0.2)':'rgba(255,255,255,0.05)'};
-                    border:1px solid ${isMe?'rgba(74,127,203,0.4)':'rgba(255,255,255,0.08)'};
-                    border-radius:6px;padding:3px 8px;font-size:11px;color:#c8d6f0;">
+                const isCr  = uid === room.creatorId;
+                const isMe  = uid === myId;
+                const masked = maskName(names[i] || '?');
+                return `<span style="display:inline-flex;align-items:center;gap:4px;background:${isMe ? 'rgba(74,127,203,0.2)' : 'rgba(255,255,255,0.05)'};border:1px solid ${isMe ? 'rgba(74,127,203,0.4)' : 'rgba(255,255,255,0.08)'};border-radius:6px;padding:3px 8px;font-size:11px;color:#c8d6f0;">
                     ${masked}
-                    ${isCreator ? '<span style="font-size:9px;background:var(--accent);color:#1a1f2e;border-radius:3px;padding:1px 4px;font-weight:800;">방장</span>' : ''}
-                    ${isMe && !isCreator ? '<span style="font-size:9px;color:#7aaae8;">(나)</span>' : ''}
-                    ${isMe && isCreator  ? '<span style="font-size:9px;color:#7aaae8;">(나)</span>' : ''}
+                    ${isCr ? '<span style="font-size:9px;background:var(--accent);color:#1a1f2e;border-radius:3px;padding:1px 4px;font-weight:800;">방장</span>' : ''}
+                    ${isMe ? '<span style="font-size:9px;color:#7aaae8;">(나)</span>' : ''}
                 </span>`;
             }).join('');
             memberSection = `
@@ -1445,14 +1523,15 @@ function renderRooms(rooms, searchCriteria, targetId) {
             </div>`;
         }
 
+        // 정산 섹션
         let paySection = '';
-        if (room.payAmount>0 && isJoined) {
-            const split   = Math.floor(parseInt(room.payAmount)/(parseInt(room.currentPax)||1));
-            const isPayer = room.payerId===myId;
+        if (room.payAmount > 0 && isJoined) {
+            const split   = Math.floor(parseInt(room.payAmount) / (parseInt(room.currentPax) || 1));
+            const isPayer = room.payerId === myId;
             paySection = `
             <div style="margin-top:12px;padding:12px;background:rgba(122,170,232,0.08);border-radius:8px;border-left:3px solid var(--accent);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <strong style="color:#c8d6f0;font-size:13px;">💰 ${isPayer?'회수할 금액':'송금할 금액'}</strong>
+                    <strong style="color:#c8d6f0;font-size:13px;">💰 ${isPayer ? '회수할 금액' : '송금할 금액'}</strong>
                     <span style="color:var(--accent);font-weight:800;font-size:16px;">${split.toLocaleString()}원</span>
                 </div>
                 <div style="font-size:11px;color:#5a6680;margin-bottom:10px;">
@@ -1460,7 +1539,7 @@ function renderRooms(rooms, searchCriteria, targetId) {
                     <code style="background:#131826;padding:2px 6px;border-radius:4px;color:#eee;margin-left:4px;">${room.payAccount}</code>
                 </div>
                 <div style="display:flex;gap:6px;">
-                ${!isPayer?`
+                ${!isPayer ? `
                     <button class="toss-btn" data-account="${room.payAccount}"
                         style="flex:1;height:38px;font-size:11px;background:#1e2d40;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#c8d6f0;cursor:pointer;">
                         <i class="fas fa-copy"></i> 계좌복사
@@ -1469,7 +1548,7 @@ function renderRooms(rooms, searchCriteria, targetId) {
                         style="flex:1;height:38px;font-size:11px;background:#0064ff;color:white;border:none;border-radius:6px;font-weight:700;cursor:pointer;">
                         <i class="fas fa-paper-plane"></i> 토스송금
                     </button>
-                `:`
+                ` : `
                     <button onclick="completePayment(${room.id})"
                         style="flex:1;height:40px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;">
                         ✓ 입금 완료 → 방 폭파
@@ -1479,35 +1558,38 @@ function renderRooms(rooms, searchCriteria, targetId) {
             </div>`;
         }
 
+        // ✅ FIX: cancelJoin에 isCreator 전달
         html += `
-        <div class="card ${isJoined?'my-room':''}" style="${isPast?'opacity:0.5;':''};padding:16px 18px;margin-bottom:12px;">
+        <div class="card ${isJoined ? 'my-room' : ''}" style="${isPast ? 'opacity:0.5;' : ''};padding:16px 18px;margin-bottom:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.04);">
-                <span style="font-size:10px;color:#5a6680;font-family:monospace;">#${String(room.id).padStart(3,'0')} ${isPast?'(종료)':''}</span>
-                <span style="font-size:11px;color:var(--accent);font-weight:800;">${room.roomName||'...'}</span>
+                <span style="font-size:10px;color:#5a6680;font-family:monospace;">#${String(room.id).padStart(3, '0')} ${isPast ? '(종료)' : ''}</span>
+                <span style="font-size:11px;color:var(--accent);font-weight:800;">${room.roomName || '...'}</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div style="flex:1;min-width:0;padding-right:10px;">
                     <div class="room-time" style="font-size:18px;margin-bottom:6px;">
                         ${room.time}
-                        ${isJoined?'<span class="my-badge" style="font-size:9px;vertical-align:middle;margin-left:5px;">참여중</span>':''}
+                        ${isJoined ? '<span class="my-badge" style="font-size:9px;vertical-align:middle;margin-left:5px;">참여중</span>' : ''}
                     </div>
                     <div style="font-size:13px;color:#b0bdd0;line-height:1.5;">${origTxt} ➔ ${destTxt}${specTxt}</div>
                     <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
                         <span class="pax-badge ${paxClass}">${room.currentPax}/${room.maxPax}</span>
-                        <span style="font-size:11px;font-weight:700;color:${isFull?'#ff4d4d':'#7aaae8'};">${statusText}</span>
+                        <span style="font-size:11px;font-weight:700;color:${isFull ? '#ff4d4d' : '#7aaae8'};">${statusText}</span>
                     </div>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:6px;min-width:80px;">
                 ${isJoined ? `
                     <button class="btn-join" onclick="currentRoomIdForPay=${room.id};openModal('payment-modal')"
                         style="width:100%;height:36px;font-size:11px;background:linear-gradient(135deg,#2e7d52,#1e5c3a);">결제등록</button>
-                    <button class="btn-join" onclick="cancelJoin(${room.id})"
-                        style="width:100%;height:36px;font-size:11px;background:#374151;">취소</button>
+                    <button class="btn-join" onclick="cancelJoin(${room.id}, ${isCreator})"
+                        style="width:100%;height:36px;font-size:11px;background:${isCreator ? '#7c2d2d' : '#374151'};">
+                        ${isCreator ? '⚠️방 삭제' : '취소'}
+                    </button>
                 ` : `
                     <button class="btn-join" onclick="joinRoom(${room.id})"
-                        ${isFull||isPast?'disabled':''}
-                        style="width:100%;height:50px;font-size:13px;${isFull||isPast?'opacity:0.3;cursor:not-allowed;':''}"
-                    >${isPast?'종료':isFull?'만차':'합승'}</button>
+                        ${isFull || isPast ? 'disabled' : ''}
+                        style="width:100%;height:50px;font-size:13px;${isFull || isPast ? 'opacity:0.3;cursor:not-allowed;' : ''}"
+                    >${isPast ? '종료' : isFull ? '만차' : '합승'}</button>
                 `}
                 </div>
             </div>
@@ -1515,21 +1597,21 @@ function renderRooms(rooms, searchCriteria, targetId) {
             ${paySection}
         </div>`;
     });
+
     div.innerHTML = html;
 }
 
-// 자동 갱신 (1분)
+// ── 자동 갱신 (1분) ──
 setInterval(() => { if (myId && !isSearchMode) socket.emit('request_init_rooms'); }, 60000);
 
-// 소켓 재연결 시 자동 재인증 (서버 재시작 등, socket.io v4)
+// ── 소켓 재연결 시 세션 재인증 ──
 socket.on('connect', () => {
     if (myId && mySessionId) {
-        // 이미 로그인된 상태에서 재연결 → 세션으로 재인증
         socket.emit('session_login', { sessionId: mySessionId });
     }
 });
 
-// 계좌 복사 이벤트 위임
+// ── 계좌 복사 이벤트 위임 ──
 document.addEventListener('click', e => {
     const btn = e.target.closest('.toss-btn[data-account]');
     if (btn) copyAccount(btn.dataset.account);
