@@ -107,7 +107,7 @@ let db;
             authProvider TEXT DEFAULT 'local',
             name         TEXT,
             nickname     TEXT,
-            phone        TEXT,
+            phone        TEXT UNIQUE,
             birthdate    TEXT,
             gender       TEXT,
             isOnboarded  INTEGER DEFAULT 0,
@@ -176,6 +176,15 @@ let db;
     await add('phone',        'TEXT');
     await add('birthdate',    'TEXT');
     await add('isOnboarded',  'INTEGER DEFAULT 0');
+
+    // phone UNIQUE 인덱스 마이그레이션 (기존 DB 대응)
+    // SQLite는 ALTER TABLE ADD CONSTRAINT 미지원 → UNIQUE INDEX로 대체
+    // WHERE phone IS NOT NULL: 미입력(카카오 신규 가입 중) 유저는 중복 허용
+    await db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone
+        ON users (phone)
+        WHERE phone IS NOT NULL;
+    `);
 
     // 만료 세션·토큰 주기적 정리 (1시간)
     setInterval(async () => {
@@ -275,6 +284,8 @@ app.post('/api/register', async (req, res) => {
             return res.status(409).json({ error: '이미 사용 중인 아이디입니다.' });
         if (email && await db.get('SELECT 1 FROM users WHERE email=?', [email]))
             return res.status(409).json({ error: '이미 사용 중인 이메일입니다.' });
+        if (await db.get('SELECT 1 FROM users WHERE phone=?', [np]))
+            return res.status(409).json({ error: '이미 가입된 휴대폰 번호입니다.' });
         const hash = await bcrypt.hash(password, 10);
         await db.run(
             `INSERT INTO users (userId, password, email, name, phone, birthdate, authProvider, isOnboarded)
@@ -284,6 +295,12 @@ app.post('/api/register', async (req, res) => {
         res.json({ ok: true });
     } catch (e) {
         console.error(e);
+        // UNIQUE 제약 위반 2차 방어 (race condition 등)
+        if (e.message?.includes('UNIQUE constraint failed')) {
+            if (e.message.includes('phone'))    return res.status(409).json({ error: '이미 가입된 휴대폰 번호입니다.' });
+            if (e.message.includes('email'))    return res.status(409).json({ error: '이미 사용 중인 이메일입니다.' });
+            if (e.message.includes('userId'))   return res.status(409).json({ error: '이미 사용 중인 아이디입니다.' });
+        }
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
@@ -323,6 +340,9 @@ app.post('/api/kakao-register', async (req, res) => {
     if (np.length < 10 || np.length > 11)
         return res.status(400).json({ error: '올바른 휴대폰 번호를 입력하세요.' });
     try {
+        // 전화번호 중복 확인 (본인 계정 제외)
+        if (await db.get('SELECT 1 FROM users WHERE phone=? AND userId!=?', [np, userId]))
+            return res.status(409).json({ error: '이미 가입된 휴대폰 번호입니다.' });
         if (email) {
             const dup = await db.get('SELECT 1 FROM users WHERE email=? AND userId!=?', [email, userId]);
             if (dup) return res.status(409).json({ error: '이미 사용 중인 이메일입니다.' });
@@ -336,6 +356,8 @@ app.post('/api/kakao-register', async (req, res) => {
         res.json({ ok: true });
     } catch (e) {
         console.error(e);
+        if (e.message?.includes('UNIQUE constraint failed') && e.message.includes('phone'))
+            return res.status(409).json({ error: '이미 가입된 휴대폰 번호입니다.' });
         res.status(500).json({ error: '서버 오류가 발생했습니다.' });
     }
 });
@@ -405,12 +427,25 @@ app.get('/auth/kakao/callback', async (req, res) => {
             if (kakaoEmail) {
                 const byEmail = await db.get(`SELECT * FROM users WHERE email=?`, [kakaoEmail]);
                 if (byEmail) {
-                    console.log('[KAKAO LINK EXISTING ACCOUNT]', byEmail.userId);
+                    console.log('[KAKAO LINK EXISTING ACCOUNT by email]', byEmail.userId);
                     await db.run(
                         `UPDATE users SET kakaoId=?, authProvider='both' WHERE userId=?`,
                         [kakaoId, byEmail.userId]
                     );
                     user = await db.get(`SELECT * FROM users WHERE userId=?`, [byEmail.userId]);
+                }
+            }
+
+            // 전화번호 기반 기존 계정 연동 (이메일 연동 실패 시)
+            if (!user && kakaoPhone) {
+                const byPhone = await db.get(`SELECT * FROM users WHERE phone=?`, [kakaoPhone]);
+                if (byPhone) {
+                    console.log('[KAKAO LINK EXISTING ACCOUNT by phone]', byPhone.userId);
+                    await db.run(
+                        `UPDATE users SET kakaoId=?, authProvider='both' WHERE userId=?`,
+                        [kakaoId, byPhone.userId]
+                    );
+                    user = await db.get(`SELECT * FROM users WHERE userId=?`, [byPhone.userId]);
                 }
             }
 

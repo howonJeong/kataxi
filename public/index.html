@@ -1456,9 +1456,13 @@ function renderRooms(rooms, searchCriteria, targetId) {
     const div = document.getElementById(targetId);
     if (!div) return;
 
-    const kstNow = new Date(Date.now() + 9 * 3600000);
-    const curD   = kstNow.toISOString().split('T')[0];
-    const curT   = kstNow.toISOString().split('T')[1].substring(0, 5);
+    const kstNow  = new Date(Date.now() + 9 * 3_600_000);
+    const curD    = kstNow.toISOString().split('T')[0];
+    const curT    = kstNow.toISOString().split('T')[1].substring(0, 5);
+    // 3시간 전 기준 (서버 broadcastRooms 와 동일)
+    const cutoff  = new Date(kstNow.getTime() - 3 * 3_600_000);
+    const cutD    = cutoff.toISOString().split('T')[0];
+    const cutT    = cutoff.toISOString().split('T')[1].substring(0, 5);
 
     if (searchCriteria && targetId === 'room-list') {
         currentSearchCriteria = searchCriteria;
@@ -1471,17 +1475,29 @@ function renderRooms(rooms, searchCriteria, targetId) {
         document.getElementById('list-title').innerText = '실시간 카풀 목록';
     }
 
-    if (!rooms.length) {
+    // 클라이언트 사이드 3시간 필터 (서버와 동기화 전 잔상 제거)
+    const visibleRooms = rooms.filter(room => {
+        const isJoined = (room.participantList || '').split(',').includes(myId);
+        // 참여자는 정산을 위해 항상 표시
+        if (isJoined) return true;
+        // 비참여자: 3시간 지난 방은 숨김
+        if (room.date < cutD) return false;
+        if (room.date === cutD && room.time < cutT) return false;
+        return true;
+    });
+
+    if (!visibleRooms.length) {
         div.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:#5a6680;">${targetId === 'my-room-list' ? '참여 중인 카풀이 없습니다.' : '등록된 카풀이 없습니다.'}</div>`;
         return;
     }
 
     let html = '', lastDate = '';
 
-    rooms.forEach(room => {
+    visibleRooms.forEach(room => {
         const ps        = (room.participantList || '').split(',');
         const isJoined  = ps.includes(myId);
         const isCreator = room.creatorId === myId;
+        // isPast: 출발 시간이 현재보다 이전 (분 단위)
         const isPast    = room.date < curD || (room.date === curD && room.time < curT);
         const remaining = room.maxPax - room.currentPax;
         const isFull    = remaining <= 0;
@@ -1558,9 +1574,13 @@ function renderRooms(rooms, searchCriteria, targetId) {
             </div>`;
         }
 
+        // ✅ FIX: 참여자는 정산을 위해 항상 선명하게 표시
+        //         비참여자 + 시간 지난 방만 흐리게
+        const cardOpacity = (isPast && !isJoined) ? 'opacity:0.45;' : '';
+
         // ✅ FIX: cancelJoin에 isCreator 전달
         html += `
-        <div class="card ${isJoined ? 'my-room' : ''}" style="${isPast ? 'opacity:0.5;' : ''};padding:16px 18px;margin-bottom:12px;">
+        <div class="card ${isJoined ? 'my-room' : ''}" style="${cardOpacity}padding:16px 18px;margin-bottom:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.04);">
                 <span style="font-size:10px;color:#5a6680;font-family:monospace;">#${String(room.id).padStart(3, '0')} ${isPast ? '(종료)' : ''}</span>
                 <span style="font-size:11px;color:var(--accent);font-weight:800;">${room.roomName || '...'}</span>
@@ -1580,10 +1600,16 @@ function renderRooms(rooms, searchCriteria, targetId) {
                 <div style="display:flex;flex-direction:column;gap:6px;min-width:80px;">
                 ${isJoined ? `
                     <button class="btn-join" onclick="currentRoomIdForPay=${room.id};openModal('payment-modal')"
-                        style="width:100%;height:36px;font-size:11px;background:linear-gradient(135deg,#2e7d52,#1e5c3a);">결제등록</button>
-                    <button class="btn-join" onclick="cancelJoin(${room.id}, ${isCreator})"
-                        style="width:100%;height:36px;font-size:11px;background:${isCreator ? '#7c2d2d' : '#374151'};">
-                        ${isCreator ? '⚠️방 삭제' : '취소'}
+                        style="width:100%;height:36px;font-size:11px;background:linear-gradient(135deg,#2e7d52,#1e5c3a);">
+                        ${isPast ? '💰 정산하기' : '결제등록'}
+                    </button>
+                    <button class="btn-join"
+                        ${isPast ? 'disabled' : `onclick="cancelJoin(${room.id}, ${isCreator})"`}
+                        style="width:100%;height:36px;font-size:11px;
+                            background:${isPast ? '#2a2f3e' : (isCreator ? '#7c2d2d' : '#374151')};
+                            color:${isPast ? '#4a5568' : '#fff'};
+                            cursor:${isPast ? 'not-allowed' : 'pointer'};">
+                        ${isPast ? '⛔ 나가기 불가' : (isCreator ? '⚠️방 삭제' : '취소')}
                     </button>
                 ` : `
                     <button class="btn-join" onclick="joinRoom(${room.id})"
