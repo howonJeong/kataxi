@@ -283,75 +283,211 @@ app.get('/auth/kakao', (_, res) => {
 
 app.get('/auth/kakao/callback', async (req, res) => {
     const { code } = req.query;
-    if (!code) return res.redirect('/?kakao_error=no_code');
+
+    console.log("=== KAKAO CALLBACK START ===");
+    console.log("CODE:", code);
+    console.log("REDIRECT_URI:", process.env.KAKAO_REDIRECT_URI);
+
+    if (!code) {
+        console.error("[KAKAO ERROR] No authorization code received.");
+        return res.redirect('/?kakao_error=no_code');
+    }
+
     try {
+        // 환경 변수 체크
+        if (!process.env.KAKAO_CLIENT_ID || !process.env.KAKAO_REDIRECT_URI) {
+            throw new Error("Missing Kakao environment variables");
+        }
+
+        // 1. Access Token 요청
         const { data: tokenData } = await axios.post(
             'https://kauth.kakao.com/oauth/token',
-            new URLSearchParams({ grant_type:'authorization_code', client_id:process.env.KAKAO_CLIENT_ID, redirect_uri:process.env.KAKAO_REDIRECT_URI, code }),
-            { headers: { 'Content-Type':'application/x-www-form-urlencoded' } }
-        );
-        const { data: ku } = await axios.get('https://kapi.kakao.com/v2/user/me', {
-            headers: { Authorization: `Bearer ${tokenData.access_token}` }
-        });
-        const kakaoId    = String(ku.id);
-        const acct       = ku.kakao_account || {};
-        const kakaoNick  = acct.profile?.nickname || `카투사${kakaoId.slice(-4)}`;
-        const kakaoEmail = acct.email        || null;
-        const kakaoName  = acct.name         || null;
-        const kakaoPhone = acct.phone_number || null;
-        const kakaoBirth = (acct.birthyear && acct.birthday)
-            ? `${acct.birthyear}-${acct.birthday.slice(0,2)}-${acct.birthday.slice(2,4)}` : null;
-
-        let user = await db.get(`SELECT * FROM users WHERE kakaoId=?`, [kakaoId]);
-        if (!user) {
-            if (kakaoEmail) {
-                const byEmail = await db.get(`SELECT * FROM users WHERE email=?`, [kakaoEmail]);
-                if (byEmail) {
-                    await db.run(`UPDATE users SET kakaoId=?, authProvider='both' WHERE userId=?`, [kakaoId, byEmail.userId]);
-                    user = await db.get(`SELECT * FROM users WHERE userId=?`, [byEmail.userId]);
+            new URLSearchParams({
+                grant_type: 'authorization_code',
+                client_id: process.env.KAKAO_CLIENT_ID,
+                redirect_uri: process.env.KAKAO_REDIRECT_URI,
+                code
+            }),
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 }
             }
-            if (!user) {
-                let uid = kakaoNick.replace(/[^a-zA-Z0-9가-힣_-]/g,'_').substring(0,16) || `user${kakaoId.slice(-4)}`;
-                if (await db.get(`SELECT 1 FROM users WHERE userId=?`, [uid])) uid = `${uid}_${kakaoId.slice(-4)}`;
-                await db.run(
-                    `INSERT INTO users (userId,email,kakaoId,authProvider,name,phone,birthdate,isOnboarded)
-                     VALUES (?,?,?,'kakao',?,?,?,0)`,
-                    [uid, kakaoEmail, kakaoId, kakaoName||null, kakaoPhone?normalizePhone(kakaoPhone):null, kakaoBirth||null]
-                );
-                user = await db.get(`SELECT * FROM users WHERE userId=?`, [uid]);
-            }
-        } else {
-            const upd = []; const prm = [];
-            if (kakaoName  && !user.name)     { upd.push('name=?');      prm.push(kakaoName); }
-            if (kakaoPhone && !user.phone)    { upd.push('phone=?');     prm.push(normalizePhone(kakaoPhone)); }
-            if (kakaoBirth && !user.birthdate){ upd.push('birthdate=?'); prm.push(kakaoBirth); }
-            if (upd.length) {
-                prm.push(user.userId);
-                await db.run(`UPDATE users SET ${upd.join(',')} WHERE userId=?`, prm);
-                user = await db.get(`SELECT * FROM users WHERE userId=?`, [user.userId]);
-            }
-        }
-
-        const tempToken = crypto.randomBytes(16).toString('hex');
-        await db.run(
-            `INSERT OR REPLACE INTO password_resets (token,userId,expiresAt,used) VALUES (?,?,?,0)`,
-            [tempToken, user.userId, Date.now() + 10 * 60 * 1000]
         );
 
+        console.log("[KAKAO TOKEN SUCCESS]", tokenData);
+
+        if (!tokenData.access_token) {
+            throw new Error("No access token received from Kakao");
+        }
+
+        // 2. 사용자 정보 요청
+        const { data: ku } = await axios.get(
+            'https://kapi.kakao.com/v2/user/me',
+            {
+                headers: {
+                    Authorization: `Bearer ${tokenData.access_token}`
+                }
+            }
+        );
+
+        console.log("[KAKAO USER DATA]", ku);
+
+        const kakaoId = String(ku.id);
+        const acct = ku.kakao_account || {};
+
+        const kakaoNick = acct.profile?.nickname || `카투사${kakaoId.slice(-4)}`;
+        const kakaoEmail = acct.email || null;
+        const kakaoName = acct.name || null;
+        const kakaoPhone = acct.phone_number ? normalizePhone(acct.phone_number) : null;
+
+        const kakaoBirth =
+            (acct.birthyear && acct.birthday)
+                ? `${acct.birthyear}-${acct.birthday.slice(0, 2)}-${acct.birthday.slice(2, 4)}`
+                : null;
+
+        let user = await db.get(
+            `SELECT * FROM users WHERE kakaoId=?`,
+            [kakaoId]
+        );
+
+        // 기존 카카오 계정 없음
+        if (!user) {
+
+            // 이메일 기반 기존 계정 연동
+            if (kakaoEmail) {
+                const byEmail = await db.get(
+                    `SELECT * FROM users WHERE email=?`,
+                    [kakaoEmail]
+                );
+
+                if (byEmail) {
+                    console.log("[KAKAO LINK EXISTING ACCOUNT]", byEmail.userId);
+
+                    await db.run(
+                        `UPDATE users
+                         SET kakaoId=?, authProvider='both'
+                         WHERE userId=?`,
+                        [kakaoId, byEmail.userId]
+                    );
+
+                    user = await db.get(
+                        `SELECT * FROM users WHERE userId=?`,
+                        [byEmail.userId]
+                    );
+                }
+            }
+
+            // 신규 유저 생성
+            if (!user) {
+                let uid = `kakao_${kakaoId}`;
+
+                console.log("[KAKAO CREATE USER]", {
+                    uid,
+                    kakaoEmail,
+                    kakaoName,
+                    kakaoPhone,
+                    kakaoBirth
+                });
+
+                await db.run(
+                    `INSERT INTO users
+                    (userId, email, kakaoId, authProvider, name, phone, birthdate, isOnboarded)
+                    VALUES (?, ?, ?, 'kakao', ?, ?, ?, 0)`,
+                    [
+                        uid,
+                        kakaoEmail,
+                        kakaoId,
+                        kakaoName,
+                        kakaoPhone,
+                        kakaoBirth
+                    ]
+                );
+
+                user = await db.get(
+                    `SELECT * FROM users WHERE userId=?`,
+                    [uid]
+                );
+            }
+
+        } else {
+            // 기존 카카오 유저 정보 보완
+            const updates = [];
+            const params = [];
+
+            if (kakaoName && !user.name) {
+                updates.push('name=?');
+                params.push(kakaoName);
+            }
+
+            if (kakaoPhone && !user.phone) {
+                updates.push('phone=?');
+                params.push(kakaoPhone);
+            }
+
+            if (kakaoBirth && !user.birthdate) {
+                updates.push('birthdate=?');
+                params.push(kakaoBirth);
+            }
+
+            if (updates.length > 0) {
+                params.push(user.userId);
+
+                await db.run(
+                    `UPDATE users SET ${updates.join(', ')} WHERE userId=?`,
+                    params
+                );
+
+                user = await db.get(
+                    `SELECT * FROM users WHERE userId=?`,
+                    [user.userId]
+                );
+            }
+        }
+
+        // temp token 생성
+        const tempToken = crypto.randomBytes(32).toString('hex');
+
+        await db.run(
+            `INSERT OR REPLACE INTO password_resets
+             (token, userId, expiresAt, used)
+             VALUES (?, ?, ?, 0)`,
+            [
+                tempToken,
+                user.userId,
+                Date.now() + 10 * 60 * 1000
+            ]
+        );
+
+        console.log("[KAKAO TEMP TOKEN CREATED]", {
+            userId: user.userId,
+            isOnboarded: user.isOnboarded
+        });
+
+        // 온보딩 여부 분기
         if (user.isOnboarded) {
-            res.redirect(`/?kakao_token=${tempToken}`);
+            return res.redirect(`/?kakao_token=${tempToken}`);
         } else {
             const qs = new URLSearchParams({
-                kakao_register: '1', tempToken, userId: user.userId,
-                name: kakaoName||'', phone: kakaoPhone?normalizePhone(kakaoPhone):'',
-                birth: kakaoBirth||'', email: kakaoEmail||'',
+                kakao_register: '1',
+                tempToken,
+                userId: user.userId,
+                name: kakaoName || '',
+                phone: kakaoPhone || '',
+                birth: kakaoBirth || '',
+                email: kakaoEmail || ''
             });
-            res.redirect(`/?${qs.toString()}`);
+
+            return res.redirect(`/?${qs.toString()}`);
         }
+
     } catch (e) {
-        console.error('[카카오 에러]', e.response?.data || e.message);
-        res.redirect('/?kakao_error=server_error');
+        console.error("=== KAKAO FULL ERROR ===");
+        console.error("Response:", e.response?.data);
+        console.error("Message:", e.message);
+        console.error("Stack:", e.stack);
+
+        return res.redirect('/?kakao_error=server_error');
     }
 });
 
