@@ -1,0 +1,61 @@
+{
+  "locations": [
+    "Pyeongtaek Stn",
+    "Pyeongtaek-Jije Stn",
+    "Warrior Zone",
+    "P6060",
+    "Pacific Victors Chapel",
+    "Pedestrian Gate",
+    "Main PX",
+    "Provider DFAC",
+    "Maude Hall",
+    "Turner Gym",
+    "Talon DFAC",
+    "Spartan DFAC",
+    "8th Army",
+    "USFK Parking Lot",
+    "CFC(Wa Mart)",
+    "KTA",
+    "Balboni Field"
+  ],
+
+  "nearby": {
+    "P6060":                  ["Spartan DFAC", "Pacific Victors Chapel", "KTA"],
+    "Pacific Victors Chapel": ["P6060", "KTA", "Spartan DFAC"],
+    "KTA":                    ["P6060", "Pacific Victors Chapel", "Spartan DFAC"],
+    "Spartan DFAC":           ["P6060", "Pacific Victors Chapel", "KTA"],
+    "Pedestrian Gate":        ["Provider DFAC"],
+    "Provider DFAC":          ["Pedestrian Gate"],
+    "Main PX":                ["Maude Hall"],
+    "Maude Hall":             ["Main PX"],
+    "Turner Gym":             ["Talon DFAC"],
+    "Talon DFAC":             ["Turner Gym"],
+    "8th Army":               ["USFK Parking Lot", "CFC(Wa Mart)"],
+    "USFK Parking Lot":       ["8th Army", "CFC(Wa Mart)"],
+    "CFC(Wa Mart)":           ["8th Army", "USFK Parking Lot"],
+    "Balboni Field":          ["Warrior Zone"],
+    "Warrior Zone":           ["Balboni Field"],
+    "Pyeongtaek Stn":         ["Pyeongtaek-Jije Stn"],
+    "Pyeongtaek-Jije Stn":    ["Pyeongtaek Stn"]
+  },
+
+  "spots": {
+    "Pyeongtaek Stn":         ["1번 출구(동부) 편의점 앞", "2번 출구(서부) 택시승강장"],
+    "Pyeongtaek-Jije Stn":    ["1번 출구 에스컬레이터 앞", "SRT 매표소 앞", "2번 출구 주차장"],
+    "Warrior Zone":           ["입구 흡연장 옆", "주차장 입구", "내부 소파 구역"],
+    "P6060":                  ["주차장 입구", "농구장", "배럭 1층"],
+    "Pacific Victors Chapel": ["버스 정류장"],
+    "Pedestrian Gate":        ["게이트 안쪽 버스 정류장", "바이크랙", "택시 승강장"],
+    "Main PX":                ["푸드코트 입구", "택시 승강장", "커미서리 입구"],
+    "Provider DFAC":          ["정문 앞", "주차장", "ZOECKLER Gym 앞"],
+    "Maude Hall":             ["건물 메인 로비 앞", "버스 정류장"],
+    "Turner Gym":             ["입구"],
+    "Talon DFAC":             ["식당 입구", "버스 정류장"],
+    "Spartan DFAC":           ["식당 정문", "옆쪽 주차구역"],
+    "8th Army":               ["버스 정류장", "주차장"],
+    "USFK Parking Lot":       ["바이크 랙", "스모킹 스테이션"],
+    "CFC(Wa Mart)":           ["와마트 입구", "연합사 근무지원단 테니스장"],
+    "KTA":                    ["터프 앞", "깃발 옆"],
+    "Balboni Field":          ["관중석 입구", "트랙 시작점"]
+  }
+}

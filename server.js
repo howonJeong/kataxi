@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
 require('dotenv').config();
 
 const { Server } = require('socket.io');
@@ -23,57 +24,42 @@ const io = new Server(server, {
     pingInterval: 25000,
 });
 
-const LOCATIONS = [
-    "Warrior Zone","P6060","Pacific Victors Chapel","Pedestrian Gate",
-    "Main PX","Provider DFAC","Maude Hall","Turner Gym","Talon DFAC",
-    "Spartan DFAC","8th Army","USFK Parking Lot","CFC(Wa Mart)","KTA",
-    "Balboni Field","Pyeongtaek Stn","Pyeongtaek-Jije Stn"
-];
+// ── 위치 데이터 로드 (locations.json) ──
+// 서버 재시작 없이 JSON만 수정하면 반영됨 (watch 없이 요청 시마다 읽으려면 아래 loadLocations 참고)
+const LOCATIONS_PATH = path.join(__dirname, 'locations.json');
+
+function loadLocations() {
+    try {
+        const raw = fs.readFileSync(LOCATIONS_PATH, 'utf8');
+        return JSON.parse(raw);
+    } catch (e) {
+        console.error('[locations.json 로드 실패]', e.message);
+        return { locations: [], nearby: {}, spots: {} };
+    }
+}
+
+// 최초 로드 (상수처럼 사용)
+let _loc = loadLocations();
+const LOCATIONS      = _loc.locations;
+const NEARBY_MAP     = _loc.nearby;
+const SPECIFIC_SPOTS = _loc.spots;
+
+// locations.json 변경 감지 → 자동 리로드
+// (위치 데이터를 수정할 때 서버 재시작 불필요)
+fs.watch(LOCATIONS_PATH, () => {
+    console.log('[locations.json 변경 감지 — 리로드]');
+    _loc = loadLocations();
+    Object.assign(LOCATIONS, _loc.locations);  // 배열은 splice/push로 갱신
+    LOCATIONS.length = 0;
+    _loc.locations.forEach(l => LOCATIONS.push(l));
+    Object.assign(NEARBY_MAP, _loc.nearby);
+    Object.assign(SPECIFIC_SPOTS, _loc.spots);
+});
 
 const mailer = nodemailer.createTransport({
     service: 'gmail',
     auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
 });
-
-const NEARBY_MAP = {
-    "P6060":                ["Spartan DFAC","Pacific Victors Chapel","KTA"],
-    "Pacific Victors Chapel":["P6060","KTA","Spartan DFAC"],
-    "KTA":                  ["P6060","Pacific Victors Chapel","Spartan DFAC"],
-    "Spartan DFAC":         ["P6060","Pacific Victors Chapel","KTA"],
-    "Pedestrian Gate":      ["Provider DFAC"],
-    "Provider DFAC":        ["Pedestrian Gate"],
-    "Main PX":              ["Maude Hall"],
-    "Maude Hall":           ["Main PX"],
-    "Turner Gym":           ["Talon DFAC"],
-    "Talon DFAC":           ["Turner Gym"],
-    "8th Army":             ["USFK Parking Lot","CFC(Wa Mart)"],
-    "USFK Parking Lot":     ["8th Army","CFC(Wa Mart)"],
-    "CFC(Wa Mart)":         ["8th Army","USFK Parking Lot"],
-    "Balboni Field":        ["Warrior Zone"],
-    "Warrior Zone":         ["Balboni Field"],
-    "Pyeongtaek Stn":       ["Pyeongtaek-Jije Stn"],
-    "Pyeongtaek-Jije Stn":  ["Pyeongtaek Stn"],
-};
-
-const SPECIFIC_SPOTS = {
-    "Pyeongtaek Stn":        ["1번 출구(동부) 편의점 앞","2번 출구(서부) 택시승강장"],
-    "Pyeongtaek-Jije Stn":   ["1번 출구 에스컬레이터 앞","SRT 매표소 앞","2번 출구 주차장"],
-    "Warrior Zone":          ["입구 흡연장 옆","주차장 입구","내부 소파 구역"],
-    "P6060":                 ["주차장 입구","건물 정문 앞"],
-    "Pacific Victors Chapel":["교회 정문 계단","주차장 끝부분"],
-    "Pedestrian Gate":       ["게이트 안쪽 벤치","CPX 쪽 보도"],
-    "Main PX":               ["푸드코트 입구","택시 승강장","커미서리 쪽 주차장"],
-    "Provider DFAC":         ["식당 정문 앞","주차장 입구"],
-    "Maude Hall":            ["건물 메인 로비 앞","주차장 깃대 아래"],
-    "Turner Gym":            ["체육관 입구","수영장 쪽 주차장"],
-    "Talon DFAC":            ["식당 입구 벤치","주차장"],
-    "Spartan DFAC":          ["식당 정문","옆쪽 주차구역"],
-    "8th Army":              ["버스 정류장","주차장"],
-    "USFK Parking Lot":      ["바이크 랙","스모킹 스테이션"],
-    "CFC(Wa Mart)":          ["와마트 입구","주차장 끝"],
-    "KTA":                   ["터프 앞","황무지"],
-    "Balboni Field":         ["관중석 입구","트랙 시작점"]
-};
 
 const ADJECTIVES = [
     "말년의","짬찬","노련한","능글맞은","뺀질대는","빠릿한","기합든","각잡힌","껄렁한","든든한",
@@ -253,6 +239,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── 공개 API ──
 app.get('/api/locations',      (_, res) => res.json(LOCATIONS));
 app.get('/api/specific-spots', (_, res) => res.json(SPECIFIC_SPOTS));
+
+// 관리자: locations.json 수동 리로드
+// curl -X POST /api/admin/reload-locations -H "x-admin-key: <ADMIN_KEY>"
+app.post('/api/admin/reload-locations', (req, res) => {
+    const key = req.headers['x-admin-key'];
+    if (!key || key !== process.env.ADMIN_KEY) return res.status(403).json({ error: 'forbidden' });
+    try {
+        const fresh = loadLocations();
+        LOCATIONS.length = 0;
+        fresh.locations.forEach(l => LOCATIONS.push(l));
+        Object.assign(NEARBY_MAP,     fresh.nearby);
+        Object.assign(SPECIFIC_SPOTS, fresh.spots);
+        console.log('[locations.json 수동 리로드 완료]');
+        res.json({ ok: true, count: LOCATIONS.length });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // 아이디 중복 확인
 app.get('/api/check-id', async (req, res) => {
